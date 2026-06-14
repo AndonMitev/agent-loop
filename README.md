@@ -1,9 +1,12 @@
 # agent-loop
 
-**Self-evolving autonomous loops for AI coding agents** (Claude Code & Codex). Give it a one-line goal; it stands
-up a loop that observes, acts, verifies, and journals — then **fires its own next tick** and re-evolves its
-directive each iteration. You set direction; the loop runs itself. The engine is plain Python + JSON + markdown
-instructions — **no API key, no build step, no infra**; it rides whichever agent you already use.
+> **Give an AI agent a one-line goal. It runs an autonomous loop that works toward it, verifies its own output,
+> journals, and fires its own next tick — AI-first, token-light, self-evolving.**
+
+Self-evolving autonomous loops for AI coding agents (Claude Code & Codex). You set direction; the loop runs
+itself — observe → act → verify → journal → re-evolve its next directive, with no user in the inner loop. The
+engine is plain Python + JSON + markdown instructions: **no API key, no build step, no infra** — it rides
+whichever agent you already use. (~1.4k always-on tokens for all 11 skills; the heavy thinking is pay-per-use.)
 
 ## The one idea
 A tick is a pure function:
