@@ -272,9 +272,19 @@ def cmd_autotick():
         return  # nothing armed -> hook allows normal exit
     a = json.load(open(AUTOLOOP))
     lid, it, mx = a["id"], a["iteration"], a["max"]
-    dispatch = load_state(lid).get("dispatch", "")
+    st = load_state(lid)
+    dispatch = st.get("dispatch", "")
     if mx > 0 and it >= mx:
-        os.remove(AUTOLOOP); print(f"STOP max-iterations ({mx})"); return
+        # max bounds the in-session burst, NOT completion. If work remains (the tick still wanted to loop, or
+        # the backlog isn't drained), say so loudly — state is fully resumable; the work is paused, not lost.
+        work_remains = dispatch == "loop" or any(b.get("status") != "done" for b in st.get("backlog", []))
+        os.remove(AUTOLOOP)
+        if work_remains:
+            print(f"STOP {lid} max-iterations ({mx}) INCOMPLETE: work remains — resume from state.next via "
+                  f"`loop.py auto {lid}` (new burst) or a cron firing /loop-tick {lid}. Nothing lost; state is resumable.")
+        else:
+            print(f"STOP {lid} max-iterations ({mx}) complete")
+        return
     if dispatch != "loop":
         os.remove(AUTOLOOP); print(f"STOP dispatch={dispatch} (loop chose to wait)"); return
     a["iteration"] = it + 1

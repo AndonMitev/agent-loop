@@ -38,6 +38,9 @@ plugin bundle, then always call `python3 .loop/loop.py`:
    with zero user input: `python3 .loop/loop.py auto <id> [max]` (default max 12). It auto-stops when the tick
    sets `dispatch` away from `loop`, when `max` is hit, or on `python3 .loop/loop.py stop`. Token rail: the cap +
    the dispatch self-stop bound it; keep each tick cheap (delegate heavy work to a subagent, cost-gate critique).
+   `max` bounds the in-session **burst, not the work**: if it caps with work still remaining, the helper says so
+   loudly and the loop stays fully resumable from `state.next` — continue with another `loop.py auto <id>` or a
+   cron. For work that won't fit one burst, prefer cron mode (fresh `/loop-tick` per tick, no cap needed).
 6. **Cadence / durability.** The loop self-schedules per its `dispatch`: `loop` → continue now; `schedule` →
    `ScheduleWakeup` (in-session, self-paced) or a cron; `event` → `Monitor`/cron on a signal. Self-paced loops are
    session-bound; wire a cron (`CronCreate` / system cron / CI calling `/loop-tick <id>`) for unattended survival.

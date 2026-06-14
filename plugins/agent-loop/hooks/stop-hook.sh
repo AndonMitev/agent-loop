@@ -22,7 +22,12 @@ case "$RES" in
       "that ends this in-session burst. Stop only at a human gate (real money / prod / publish / destructive)."
     )}))' "$LID"
     ;;
+  *INCOMPLETE*)
+    # Capped with work remaining — surface it loudly so it isn't a silent death; state is resumable.
+    echo "agent-loop: $RES" >&2
+    exit 0
+    ;;
   *)
-    exit 0                                 # STOP ... or empty -> allow exit
+    exit 0                                 # STOP (done / dispatch-flip) or empty -> allow exit
     ;;
 esac
