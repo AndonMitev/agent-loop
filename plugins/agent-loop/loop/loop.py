@@ -106,7 +106,8 @@ def cmd_init(argv):
     st = {
         "id": lid, "profile": prof, "goal": goal,
         "created": ts, "updated": ts, "deadline": deadline,
-        "cadence": p["cadence"], "gate": p["gate"], "triggers": p["triggers"],
+        "dispatch": p.get("dispatch", "schedule"), "cadence": p["cadence"],
+        "gate": p["gate"], "triggers": p["triggers"],
         "config": {}, "prereg": [], "backlog": [],
         "last": {"cycle": 0, "ts": ts},
         "next": p["first_directive"],

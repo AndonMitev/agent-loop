@@ -31,7 +31,17 @@ Run one tick of loop `<id>`. You are a **stateless** agent; the substrate is you
    optional in `act`: `config` (merge), `prereg_add` / `prereg_resolve`, `backlog_add` / `backlog_done`.
    The helper stamps cycle+ts, updates `state.last`, and sets `state.next` — the directive the NEXT tick reads.
    **That is the re-evolution.**
-5. **End with a one-line delta.** Re-schedule the next wake per the profile's cadence if self-pacing.
+5. **Decide DISPATCH for the next tick — schedule vs loop.** The test: *is there useful work to do right now
+   whose result the next step needs?*
+   - **YES → loop** — run the next tick immediately (no wait). Progress is bounded by your compute, not the world.
+     (build mid-milestone; draining a fix backlog; refine-until-passing.)
+   - **NO → schedule** — wait. Polling *fast* external state you can't be pushed (CI, a market, a deploy) →
+     short interval (≲270s, stays in the cache window). Genuinely *idle / slow* signal → long interval (20–30m+)
+     or **event** (wake on push: background-task completion, `Monitor` tailing a log, or a cron heartbeat).
+   `state.dispatch` is the profile default; OVERRIDE per tick by what's actually true now (e.g. a maintenance loop
+   is `event` when idle but flips to `loop` while draining fixes; an experiment loop is `schedule` but `loop`-bursts
+   when new data lands). Record the choice in `next` and actually set the wake (ScheduleWakeup / cron / immediate).
+6. **End with a one-line delta.**
 
 ## Rules (carry across all loops)
 - Context is scratch, files are truth: nothing critical lives only in your head.

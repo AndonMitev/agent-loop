@@ -1,7 +1,8 @@
 {
   "experiment": {
     "what": "Validate an idea against a slow, noisy external signal. Watch-and-judge. Honest null = success.",
-    "cadence": "heartbeat ~hourly; self-pace LONG (20-30m+) when idle, tight only when fired data lands",
+    "dispatch": "schedule",
+    "cadence": "heartbeat ~hourly; self-pace LONG (20-30m+) when idle; loop-BURST briefly when fired data lands",
     "gate": "pre-registered bar (frozen BEFORE peeking); keep/kill on the bar at the deadline; do NOT widen to chase",
     "tick_body": "OBSERVE signal -> SCORE vs bar -> CRITIQUE (cost-gated: only on new data/anomaly) -> ACT (check preregs) -> JOURNAL",
     "triggers": [
@@ -14,7 +15,8 @@
   },
   "build": {
     "what": "Construct toward a goal from a milestone DAG. Fast local feedback. Builder never grades its own work.",
-    "cadence": "tight; wake-immediately and loop until the current milestone's acceptance is met",
+    "dispatch": "loop",
+    "cadence": "tight; wake-immediately and loop until the current milestone's acceptance is met; SCHEDULE-wait only when blocked on CI/human",
     "gate": "acceptance criteria met AND a SEPARATE verifier (not the builder) confirms via real tests/run",
     "tick_body": "PICK milestone -> IMPLEMENT (/test-driven-development) -> VERIFY (separate agent, real checks) -> FIX -> INTEGRATE -> JOURNAL",
     "triggers": [
@@ -27,7 +29,8 @@
   },
   "maintenance": {
     "what": "Keep an existing app healthy. Self-source work from the app's own signals. Regression is the dominant risk.",
-    "cadence": "event/daily; wake when backlog non-empty or a health signal fires; sleep when green & empty",
+    "dispatch": "event",
+    "cadence": "event/daily: wait for a signal; LOOP while draining a fix backlog; sleep when green & empty",
     "gate": "full existing suite green BEFORE and AFTER; no regression; changes SURGICAL (touch only what the item needs)",
     "tick_body": "SCAN signals (tests/types/lint/CVEs/TODOs/metrics) -> PICK item -> IMPLEMENT surgically -> FULL-SUITE regression gate -> JOURNAL",
     "triggers": [

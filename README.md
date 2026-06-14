@@ -21,21 +21,12 @@ Only one thing changes by **type of work** — a *profile*. The loop primitive a
 | **build** | construct from a milestone DAG | acceptance met **and a verifier separate from the builder** confirms |
 | **maintenance** | keep an existing app healthy | full suite green **before and after**; no regression; surgical edits |
 
-## Install
-
-### Option A — native plugin (recommended)
+## Install (Claude Code plugin)
 ```
 /plugin marketplace add AndonMitev/agent-loop
 /plugin install agent-loop@agent-loop
 ```
 Then in any project: `/spawn-loop "<your goal>"`. On first run the helper is copied into that project's `.loop/`.
-
-### Option B — clone + install into a repo
-```
-git clone https://github.com/AndonMitev/agent-loop
-./agent-loop/install.sh /path/to/your/repo
-```
-Copies the skills into `.claude/skills/` and the substrate into `.loop/`, committed with your project.
 
 ## Use
 ```
@@ -50,6 +41,18 @@ Loops are condition-routed, not dumbly periodic. A trigger is a predicate over `
 levels: **when** a tick fires (time / push) and **what** it does once awake (the matched action). Push exists for
 harness-tracked events (background-task completion, the `Monitor` tool tailing a log); external state is polled on
 the heartbeat. See each loop's `state.triggers`.
+
+## Schedule vs loop (per-tick dispatch)
+It's not one or the other per loop — each loop *oscillates*, decided at the end of every tick:
+
+> **Is there useful work to do right now whose result the next step needs?**
+> **YES → loop** (run the next tick immediately; bounded by your compute, not the world).
+> **NO → schedule** (wait): fast external state you must poll → short interval (≲270s); idle / slow signal →
+> long interval (20–30m+) or **event** (wake on push: task completion, `Monitor`, a cron heartbeat).
+
+`state.dispatch` holds the profile default (`build → loop`, `experiment → schedule`, `maintenance → event`); each
+tick overrides it by what's actually true (maintenance flips to `loop` while draining fixes; experiment
+`loop`-bursts when new data lands).
 
 ## Honest limitations
 - **Session-only.** Loops tick on Claude Code's scheduler, which is tied to the session. For loops that survive a
@@ -66,7 +69,6 @@ plugins/agent-loop/
   skills/loop-tick/SKILL.md            # run one iteration
   loop/loop.py                         # the substrate helper (deterministic, schema-enforcing)
   loop/profiles.json                   # the three work-type profiles
-install.sh                             # Option B installer
 ```
 
 ## License
