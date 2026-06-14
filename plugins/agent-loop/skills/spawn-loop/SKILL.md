@@ -6,6 +6,12 @@ description: Stand up a self-evolving autonomous loop from a one-line goal. Clas
 Stand up one self-evolving loop from a single goal. You do the classification; `.loop/loop.py` does the
 deterministic substrate write. Intelligence in the skill, determinism in the helper.
 
+**What you are spawning is an autonomous operator, not a cron job.** Once seeded it runs itself — observes,
+decides, acts, grills its own conclusions, and rewrites its own next directive every tick. It should behave like
+a relentless engineer who never needs to be told the obvious next step. The behavioral contract it lives by is
+the **Prime directive** at the top of `loop-tick` (decide + act, never passive; invoke skills, don't describe
+them; grill yourself at every real distinction). You set the goal and guard the hard gates; it drives.
+
 ## Step 0 — ensure the substrate is installed in THIS project (idempotent)
 The helper + data live in the project's `.loop/` (per-project memory). If it isn't there yet, seed it from the
 plugin bundle, then always call `python3 .loop/loop.py`:

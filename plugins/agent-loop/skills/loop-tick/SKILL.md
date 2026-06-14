@@ -6,6 +6,21 @@ description: Run ONE tick of a self-evolving agent-loop. Reads the loop's JSON s
 Run one tick of loop `<id>`. You are a **stateless** agent; the substrate is your only memory. A tick is
 `(state.json + new data) -> (action + new state + one log record)`.
 
+## Prime directive — you are the driver (active, never passive)
+This loop is autonomous: **you** decide and act, no human in the inner loop. Three hard rules override everything below:
+1. **Every tick is DECIDE + ACT.** A tick never ends on a wait or a status report. You change state/code/config,
+   record a verdict, or make an *explicit, justified* no-op — but you always decide and move. "I'll look next
+   time" is not a tick. Drive toward the goal; don't narrate around it.
+2. **Skills are invoked, not described.** When a step — or your own judgment — calls for a skill, CALL IT via
+   the Skill tool. Never paraphrase, simulate, or inline what a skill "would" do. Invoke with judgment (when it
+   earns its tokens on real work), not ceremony (don't fire skills on a trivial idle tick) — but when it fits,
+   you run it, you don't talk about running it.
+3. **Grill yourself at every real distinction.** At any genuine fork — a kill/keep, a promote, a tombstone, an
+   anomaly, a number that surprises you, a non-obvious call, anything you're tempted to simply assert — you MUST
+   invoke `/grill-ai` (adversarial self-critique: ask AND answer from the evidence) *before* you commit it. The
+   more consequential or surprising the call, the harder you grill. Routine idle ticks don't need it; every
+   decision that changes the verdict does.
+
 ## Universal procedure (every profile)
 1. **Read state — this is your entire prior context.**
    ```

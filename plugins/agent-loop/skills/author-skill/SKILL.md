@@ -6,6 +6,10 @@ description: AI-first authoring of a NEW agent skill, autonomously (no human rev
 Grow the loop's OWN capabilities: turn a recurring manual pattern into a reusable skill — autonomously, no human
 review. (This is the AI-first counterpart to human "write-a-skill" tools that stop to interview you.)
 
+This is the loop **writing its own tools** — the sharpest expression of the `loop-tick` Prime directive (the driver
+acts, it doesn't wait for capabilities to be handed to it). When a step recurs, the loop manufactures the skill and
+wires it in, so next time it's one call. That self-extension is what lets one loop scale into many.
+
 ## When
 Invoked by `/self-evolve` (or directly) once a step has recurred across **several** ticks and is stable enough to
 freeze. Never author for a one-off — that's premature abstraction.

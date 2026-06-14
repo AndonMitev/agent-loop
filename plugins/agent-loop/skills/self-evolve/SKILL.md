@@ -6,6 +6,11 @@ description: AI-first retrospective that evolves the LOOP ITSELF — extracts du
 The meta-loop: improve the loop's **own machinery** from its own history — autonomously. A normal tick evolves
 `state.next`; self-evolve evolves the gate, the triggers, the profile, the memory, and even the skill set.
 
+This is the loop **upgrading itself** — the trait that makes it feel like an autonomous intelligence rather than a
+script: it gets sharper the longer it runs. It is a standing obligation of the driver (see the `loop-tick` Prime
+directive: decide + act, invoke skills, grill at distinctions), not optional polish. A loop that never evolves is
+just a cron.
+
 ## Procedure (fully autonomous)
 1. **Read history for PATTERNS, not anecdotes.** `loop.py tail <id> N` + `state`. Look across cycles: what
    repeatedly worked, failed, or surprised. One-off noise is not a pattern.

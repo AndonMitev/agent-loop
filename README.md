@@ -69,7 +69,20 @@ python3 .loop/loop.py rm repo-green
 More worked examples — one per profile (research / experiment / build / maintenance) — in **[EXAMPLES.md](EXAMPLES.md)**.
 
 ## Autonomy (AI-first)
-The loop does not rely on you to drive each step — you give a goal and approve hard gates; it does the rest:
+The loop does not rely on you to drive each step — you give a goal and approve hard gates; it does the rest. It is
+built to behave like an autonomous engineer, not a script. Every tick lives by a **Prime directive** (the first
+thing `loop-tick` reads, overriding everything else):
+
+1. **Decide + act, never passive.** A tick never ends on a wait or a status report — it changes state/code/config,
+   records a verdict, or makes an *explicit, justified* no-op. It always moves toward the goal.
+2. **Invoke skills, don't describe them.** When the work calls for a capability (`/deep-research`, `/grill-ai`,
+   `/plan-decompose`, `/test-driven-development`, …) the loop *calls the skill* — judgment-gated (only when it
+   earns its tokens), never paraphrased or simulated.
+3. **Grill itself at every real distinction.** Any kill/keep, promote, tombstone, anomaly, or surprising result
+   fires `/grill-ai` adversarial self-critique *before* the call is committed. The loop argues with itself so you
+   don't have to.
+
+How it carries that out:
 - **Self-firing.** Each tick chooses its `dispatch` and fires the next tick itself — `loop` continues now,
   `schedule` self-wakes via `ScheduleWakeup`/cron, `event` waits on `Monitor`/a signal. One `/spawn-loop` →
   a self-running loop.
