@@ -1,8 +1,9 @@
 # agent-loop
 
 **Self-evolving autonomous loops for Claude Code.** Give it a one-line goal; it stands up a loop that observes,
-acts, verifies, and journals — then re-evolves its own next directive each iteration. Pure prompts + a
-~180-line substrate helper: **no API key, no build step, no infra.** It rides your Claude Code plan.
+acts, verifies, and journals — then **fires its own next tick** and re-evolves its directive each iteration.
+You set direction; the loop runs itself. Pure prompts + a small substrate helper: **no API key, no build step,
+no infra.** It rides your Claude Code plan.
 
 ## The one idea
 A tick is a pure function:
@@ -28,14 +29,42 @@ Only one thing changes by **type of work** — a *profile*. The loop primitive a
 ```
 Then in any project: `/spawn-loop "<your goal>"`. On first run the helper is copied into that project's `.loop/`.
 
+## Quickstart (install → first output)
+```
+/plugin marketplace add AndonMitev/agent-loop
+/plugin install agent-loop@agent-loop
+/spawn-loop "keep this repo green and tidy"
+```
+`/spawn-loop` classifies the goal, seeds `.loop/<id>/`, runs the first tick, and schedules the next — you don't
+click through iterations. You'll see a loop appear:
+```
+$ python3 .loop/loop.py list
+repo-health  [maintenance] event    cyc=  1  preg=0 todo=0  next: sleep until a health signal fires …
+```
+Inspect any loop with `python3 .loop/loop.py status <id>`; remove one with `python3 .loop/loop.py rm <id>`.
+
 ## Use
 ```
-/spawn-loop "keep this repo green and tidy"   # → classifies → maintenance loop, seeds .loop/
-/loop-tick <id>                               # one iteration: read state → work → journal → set next
-python3 .loop/loop.py list                     # every loop at a glance
-python3 .loop/loop.py status <id>              # one-screen view of a single loop
+/spawn-loop "<goal>"             classify → seed → run first tick → self-schedule (one command, self-running)
+/loop-tick <id>                  manually run an iteration (the loop does this itself; use to nudge/debug)
+python3 .loop/loop.py list       every loop: profile, dispatch, cycle, open preregs, todo, next
+python3 .loop/loop.py status <id>  one-screen view of a single loop
+python3 .loop/loop.py rm <id>    delete a loop
 ```
 See **[EXAMPLES.md](EXAMPLES.md)** for real runs of all three profiles (maintenance / build / experiment).
+
+## Autonomy (AI-first)
+The loop does not rely on you to drive each step — you give a goal and approve hard gates; it does the rest:
+- **Self-firing.** Each tick chooses its `dispatch` and fires the next tick itself — `loop` continues now,
+  `schedule` self-wakes via `ScheduleWakeup`/cron, `event` waits on `Monitor`/a signal. One `/spawn-loop` →
+  a self-running loop.
+- **AI second brain, not a human.** Critique is `/grill-ai` (the agent asks *and answers* from evidence) +
+  `/doubt-driven-development`; errors are handled by `/debugging-and-error-recovery`. No human in the critique
+  or recovery path.
+- **ACT, don't ask.** The loop decides and proceeds. It stops to ask **only** at genuine human gates — real
+  money, prod deploy, external publish, spending, or destructive/irreversible ops.
+- **Durable autonomy.** For unattended survival across closed sessions, point a cron/CI at `/loop-tick <id>`
+  (or graduate to Managed Agents). Self-paced (`ScheduleWakeup`) loops run while the session is alive.
 
 ## Triggers
 Loops are condition-routed, not dumbly periodic. A trigger is a predicate over `(state, signal)` → action, at two
@@ -56,8 +85,9 @@ tick overrides it by what's actually true (maintenance flips to `loop` while dra
 `loop`-bursts when new data lands).
 
 ## Honest limitations
-- **Session-only.** Loops tick on Claude Code's scheduler, which is tied to the session. For loops that survive a
-  closed session, wire the tick to a durable scheduler (a cron/CI job, or graduate to Managed Agents).
+- **Self-paced loops are session-bound.** In-session self-wake (`ScheduleWakeup`) runs only while the session is
+  alive. For unattended survival across closed sessions, drive `/loop-tick <id>` from a cron/CI job (or Managed
+  Agents) — same loop, durable clock.
 - **Verification is yours to ground.** The framework gives you the *places* to verify (the build profile's
   separate-verifier step, the maintenance regression gate) — the checks themselves must run real tests/builds.
 

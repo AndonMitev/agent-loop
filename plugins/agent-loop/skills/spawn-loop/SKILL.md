@@ -31,9 +31,13 @@ plugin bundle, then always call `python3 .loop/loop.py`:
    (cadence / gate / triggers / first directive) and writes cycle 0 to `log.jsonl`.
 4. **Pre-register up front** (experiment loops especially): if there's a kill/keep bar, append it BEFORE any
    data via a first tick's `act.prereg_add`. For build/maintenance, seed the backlog via `act.backlog_add`.
-5. **Schedule the cadence** the profile implies (ScheduleWakeup for self-paced, or a cron). State the cadence
-   you chose. Loops are session-only unless wired to a durable scheduler — say so.
-6. **Optionally run tick 1 now** via `/loop-tick <id>` to prove the loop flows.
+5. **Launch it autonomously — AI-first, no user in the inner loop.** Immediately run the first tick yourself via
+   `/loop-tick <id>`; do NOT wait for the user to invoke it. From there the tick self-perpetuates (it fires its
+   own next tick per its dispatch — see loop-tick step 6). One `/spawn-loop` call yields a *self-running* loop.
+6. **Cadence / durability.** The loop self-schedules per its `dispatch`: `loop` → continue now; `schedule` →
+   `ScheduleWakeup` (in-session, self-paced) or a cron; `event` → `Monitor`/cron on a signal. Self-paced loops are
+   session-bound; wire a cron (`CronCreate` / system cron / CI calling `/loop-tick <id>`) for unattended survival.
+   State the cadence + durability you chose.
 
 ## Output
 Terse: the id, profile, gate, first directive, and the chosen cadence. Then hand off to `/loop-tick`.

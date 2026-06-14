@@ -17,8 +17,9 @@ Run one tick of loop `<id>`. You are a **stateless** agent; the substrate is you
 2. **Evaluate triggers** against state + observed signal — run only the matched action (keeps ticks cheap).
 3. **Run the profile's tick body** (from `state.profile`):
    - **experiment** — OBSERVE the signal → SCORE vs `state.gate`/`prereg` → CRITIQUE *(cost-gated: only on
-     new data / anomaly → `/grill-ai` + a `critic` subagent + `/doubt-driven-development`)* → ACT (check preregs;
-     bar-clear → flag human; deadline no-clear → tombstone). Pre-register any NEW threshold BEFORE peeking.
+     new data / anomaly → `/grill-ai` + a general-purpose subagent with an adversarial prompt, or your `critic`
+     agent if the environment has one, + `/doubt-driven-development`)* → ACT (check preregs; bar-clear → flag
+     human; deadline no-clear → tombstone). Pre-register any NEW threshold BEFORE peeking.
    - **build** — PICK the current milestone → IMPLEMENT via `/test-driven-development` → **VERIFY** with REAL
      checks the builder didn't write: a *deterministic mechanical* check (compile / test / run the command) is
      enough on its own; for *judgment-heavy* acceptance (does it read well? is it correct in spirit?) use a
@@ -45,9 +46,16 @@ Run one tick of loop `<id>`. You are a **stateless** agent; the substrate is you
    `state.dispatch` is the profile default; OVERRIDE per tick by what's actually true now (e.g. a maintenance loop
    is `event` when idle but flips to `loop` while draining fixes; an experiment loop is `schedule` but `loop`-bursts
    when new data lands). Persist the choice by adding a top-level `"dispatch": "loop"|"schedule"|"event"` to the
-   append record (so `list`/`status` show the CURRENT mode, not just the profile default), and actually set the
-   wake (ScheduleWakeup / cron / immediate).
-6. **End with a one-line delta.**
+   append record (so `list`/`status` show the CURRENT mode).
+6. **Fire the next tick YOURSELF — the loop is self-perpetuating (AI-first, no user in the inner loop).** Act on
+   the dispatch you just chose; do NOT wait for the user to re-invoke `/loop-tick`:
+   - `loop` → run the next tick **immediately, in this same turn** (continue working; don't stop).
+   - `schedule` → schedule a self-wake to run the next tick after the interval: `ScheduleWakeup` (in-session,
+     self-paced) or a cron (`CronCreate` / system cron / CI calling `/loop-tick <id>`, durable across sessions).
+   - `event` → arm a wake on the signal: the `Monitor` tool tailing the relevant log/output, or a cron heartbeat.
+   Only **stop and ask the human** at a real gate — real money, prod deploy, external publish, spending,
+   destructive/irreversible ops. Everything else: decide and proceed.
+7. **End with a one-line delta** (the byproduct of acting, not a substitute for it).
 
 ## Rules (carry across all loops)
 - Context is scratch, files are truth: nothing critical lives only in your head.

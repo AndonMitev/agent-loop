@@ -29,8 +29,11 @@ Commands:
                                                          "backlog_add":[{id,want,acceptance}]
                                                          "backlog_done":["B1"]
   rotate <id> [KEEP]                fold all but the last KEEP records to log.archive.jsonl (default 50).
+  rm <id>                           delete a loop (its whole .loop/<id>/ directory). Irreversible.
+
+Prerequisite: python3 on PATH. No third-party packages.
 """
-import json, os, sys, datetime
+import json, os, sys, datetime, shutil
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 PROFILES = os.path.join(BASE, "profiles.json")
@@ -228,6 +231,14 @@ def cmd_rotate(lid, keep=50):
     print(f"rotated {len(old)} -> archive; kept {len(new)}")
 
 
+def cmd_rm(lid):
+    d, s, _, _ = paths(lid)
+    if not os.path.exists(s):
+        sys.exit(f"no loop '{lid}'")
+    shutil.rmtree(d)
+    print(f"removed loop '{lid}'")
+
+
 def main():
     a = sys.argv[1:] or ["list"]
     cmd = a[0]
@@ -247,6 +258,8 @@ def main():
         cmd_append(a[1])
     elif cmd == "rotate":
         cmd_rotate(a[1], int(a[2]) if len(a) > 2 else 50)
+    elif cmd == "rm":
+        cmd_rm(a[1])
     else:
         sys.exit(f"unknown command: {cmd}")
 

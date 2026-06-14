@@ -30,9 +30,14 @@ Milestone DAG, fast feedback, *verifier separate from builder*; dispatch stays `
 #     B4 verifier rule refined      B5 bundle companion skills (broken refs)
 #   verified each with a real command run, then:
 
-python3 -c 'import json;print(json.dumps({"observe":{...},"decide":{...},"act":{
-  "backlog_add":[{"id":"B1","want":"...","status":"done"}],"backlog_done":["B1"]},
-  "dispatch":"schedule","next":"..."}))' | python3 .loop/loop.py append al-dev
+python3 -c 'import json;print(json.dumps({
+  "observe":{"note":"found friction by using the tool"},
+  "decide":{"verdict":"build-burst","why":"fix it now"},
+  "act":{"change":"shipped the fix",
+         "backlog_add":[{"id":"B1","want":"list shows dispatch","acceptance":"loop.py list prints dispatch"}],
+         "backlog_done":["B1"]},
+  "dispatch":"schedule",
+  "next":"work ran out -> wait"}))' | python3 .loop/loop.py append al-dev
 #   when the work ran out, the tick flipped dispatch loop → schedule (it persists, shows in list)
 ```
 
