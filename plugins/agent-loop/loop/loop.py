@@ -327,6 +327,12 @@ def cmd_rm(lid):
     print(f"removed loop '{lid}'")
 
 
+def need_id(a, cmd):
+    if len(a) < 2:
+        sys.exit(f"usage: loop.py {cmd} <id>")
+    return a[1]
+
+
 def main():
     a = sys.argv[1:] or ["list"]
     cmd = a[0]
@@ -335,21 +341,21 @@ def main():
     elif cmd == "init":
         cmd_init(a[1:])
     elif cmd == "state":
-        cmd_state(a[1])
+        cmd_state(need_id(a, cmd))
     elif cmd == "status":
-        cmd_status(a[1])
+        cmd_status(need_id(a, cmd))
     elif cmd == "tail":
-        cmd_tail(a[1], int(a[2]) if len(a) > 2 else 5)
+        cmd_tail(need_id(a, cmd), int(a[2]) if len(a) > 2 else 5)
     elif cmd == "check":
-        cmd_check(a[1])
+        cmd_check(need_id(a, cmd))
     elif cmd == "append":
-        cmd_append(a[1])
+        cmd_append(need_id(a, cmd))
     elif cmd == "rotate":
-        cmd_rotate(a[1], int(a[2]) if len(a) > 2 else 50)
+        cmd_rotate(need_id(a, cmd), int(a[2]) if len(a) > 2 else 50)
     elif cmd == "rm":
-        cmd_rm(a[1])
+        cmd_rm(need_id(a, cmd))
     elif cmd == "auto":
-        cmd_auto(a[1], a[2] if len(a) > 2 else 12)
+        cmd_auto(need_id(a, cmd), a[2] if len(a) > 2 else 12)
     elif cmd == "stop":
         cmd_stop()
     elif cmd == "autotick":
