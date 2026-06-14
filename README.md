@@ -42,17 +42,28 @@ click through iterations. You'll see a loop appear:
 $ python3 .loop/loop.py list
 repo-health  [maintenance] event    cyc=  1  preg=0 todo=0  next: sleep until a health signal fires …
 ```
-Inspect any loop with `python3 .loop/loop.py status <id>`; remove one with `python3 .loop/loop.py rm <id>`.
+Inspect it with `python3 .loop/loop.py status repo-health`; remove it with `python3 .loop/loop.py rm repo-health`.
 
-## Use
+## Use — a full walkthrough (real commands, real output)
 ```
-/spawn-loop "<goal>"             classify → seed → run first tick → self-schedule (one command, self-running)
-/loop-tick <id>                  manually run an iteration (the loop does this itself; use to nudge/debug)
-python3 .loop/loop.py list       every loop: profile, dispatch, cycle, open preregs, todo, next
-python3 .loop/loop.py status <id>  one-screen view of a single loop
-python3 .loop/loop.py rm <id>    delete a loop
+# 1. Spawn. One command: classifies the goal, seeds .loop/, runs the first tick, schedules the next.
+/spawn-loop "keep my repo green: tests pass and types check"
+#   → creates loop 'repo-green' [maintenance], runs tick 1, self-schedules
+
+# 2. See all your loops.
+python3 .loop/loop.py list
+#   repo-green  [maintenance] event  cyc=1  preg=0 todo=0  next: sleep until a health signal fires …
+
+# 3. Inspect one loop — goal, gate, last reading, what it'll do next.
+python3 .loop/loop.py status repo-green
+
+# 4. Nudge it manually (it ticks itself; use this only to debug or push it along).
+/loop-tick repo-green
+
+# 5. Delete it when you're done.
+python3 .loop/loop.py rm repo-green
 ```
-See **[EXAMPLES.md](EXAMPLES.md)** for real runs of all three profiles (maintenance / build / experiment).
+More worked examples — one per profile (research / experiment / build / maintenance) — in **[EXAMPLES.md](EXAMPLES.md)**.
 
 ## Autonomy (AI-first)
 The loop does not rely on you to drive each step — you give a goal and approve hard gates; it does the rest:
