@@ -20,7 +20,8 @@ Run one tick of loop `<id>`. You are a **stateless** agent; the substrate is you
      new data / anomaly → `/grill-ai` + a general-purpose subagent with an adversarial prompt, or your `critic`
      agent if the environment has one, + `/doubt-driven-development`)* → ACT (check preregs; bar-clear → flag
      human; deadline no-clear → tombstone). Pre-register any NEW threshold BEFORE peeking.
-   - **build** — PICK the current milestone → IMPLEMENT via `/test-driven-development` → **VERIFY** with REAL
+   - **build** — if the backlog is empty, `/plan-decompose` the goal into milestones first. Then: PICK the current
+     milestone → IMPLEMENT via `/test-driven-development` → **VERIFY** with REAL
      checks the builder didn't write: a *deterministic mechanical* check (compile / test / run the command) is
      enough on its own; for *judgment-heavy* acceptance (does it read well? is it correct in spirit?) use a
      SEPARATE agent so the builder never grades its own work → FIX → INTEGRATE → mark milestone done.
@@ -64,6 +65,8 @@ Run one tick of loop `<id>`. You are a **stateless** agent; the substrate is you
 - Pre-register thresholds BEFORE peeking; honest null = success; cut −EV, don't widen to chase.
 - Guardrails are human-gated (real money, prod deploy, external publish, spending) — flag, don't fire.
 - Durable verdicts (tombstone / promotion / validated finding) graduate OUT to the repo's journal + memory.
+- Self-evolve periodically: every few cycles, or at a verdict, run `/self-evolve` to improve the loop's OWN
+  machinery (gate/triggers/profile), graduate lessons to memory, and `/author-skill` any step that keeps recurring.
 - Cost discipline: spend reasoning (subagents/skills) only when a trigger matches real new work.
 - Don't tunnel-vision (zoom-out): every few iterations, or whenever a loop seems stuck or drilling deep,
   re-read `state.goal` and confirm the current work still serves it; go up a layer (map the relevant

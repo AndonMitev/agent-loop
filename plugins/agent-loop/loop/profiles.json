@@ -25,7 +25,7 @@
       {"when": "on-verify-green", "do": "mark done, proceed"},
       {"when": "on-backlog-empty", "do": "ship/demo, flag human gate"}
     ],
-    "first_directive": "RESEARCH + DECOMPOSE: write milestones into backlog, each with FROZEN acceptance criteria; pick milestone 1"
+    "first_directive": "RESEARCH + DECOMPOSE via /plan-decompose: write milestones into backlog, each with FROZEN acceptance criteria; pick milestone 1"
   },
   "maintenance": {
     "what": "Keep an existing app healthy. Self-source work from the app's own signals. Regression is the dominant risk.",

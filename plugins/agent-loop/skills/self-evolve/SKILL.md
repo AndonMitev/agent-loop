@@ -1,0 +1,29 @@
+---
+name: self-evolve
+description: AI-first retrospective that evolves the LOOP ITSELF — extracts durable lessons from recent cycles, updates the loop's gate/triggers/dispatch when a pattern proves out, graduates verdicts to the repo journal + memory, and autonomously AUTHORS a new skill when a manual step keeps recurring. No human in the loop. Use periodically (every N cycles) or at a verdict / tombstone.
+---
+
+The meta-loop: improve the loop's **own machinery** from its own history — autonomously. A normal tick evolves
+`state.next`; self-evolve evolves the gate, the triggers, the profile, the memory, and even the skill set.
+
+## Procedure (fully autonomous)
+1. **Read history for PATTERNS, not anecdotes.** `loop.py tail <id> N` + `state`. Look across cycles: what
+   repeatedly worked, failed, or surprised. One-off noise is not a pattern.
+2. **Extract DURABLE lessons** — the ones true beyond this single loop.
+3. **Evolve the machinery** (only on a pattern with ≥ a few cycles of evidence):
+   - Gate / `dispatch` default / triggers mis-set? Update via `act.config` and record the evidence + why.
+   - A verdict reached (bar cleared / tombstone)? **Graduate it OUT** to the repo's journal + a memory file,
+     and `prereg_resolve` it. Loop-local noise stays in the log; durable truth leaves the loop.
+   - **A manual step recurred across several ticks?** Run `/author-skill` to write a new skill for it
+     autonomously and wire it into the tick, so next time it's one call. *This is the self-evolution*: the loop
+     grows its own capabilities instead of repeating itself. (No human review — `/author-skill` is AI-first.)
+4. **Prune.** Drop dead backlog items / resolved preregs; `loop.py rotate <id>` if the log is long (token rail).
+5. **Journal the evolution** as one record (what changed in the machinery + the evidence); set `state.next`.
+
+## Rules
+- Evolve on **patterns** (≥ a few cycles), not single events; an honest "nothing to evolve this cycle" is a
+  success, not a failure.
+- **Net / +EV over vanity metrics**: don't widen a gate to chase a loss; cut −EV, keep +EV.
+- Durable lessons graduate OUT (journal + memory); keep the hot state small.
+- Autonomous: no human review of the evolution. Only HUMAN-GATE changes that cross a real gate (real money,
+  prod deploy, external publish, destructive/irreversible).

@@ -121,11 +121,15 @@ plugins/agent-loop/
 ```
 
 ## Companion skills (bundled)
-The loop tick calls a few skills, vendored into the plugin so it works out of the box:
-- `grill-ai` — original, the AI-to-AI critique second brain.
-- `doubt-driven-development`, `test-driven-development`, `debugging-and-error-recovery` — from
-  [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT).
+The loop tick calls these, vendored into the plugin so it works out of the box:
+- **Original, AI-first** — `grill-ai` (AI-to-AI critique second brain), `plan-decompose` (autonomous goal →
+  verifiable milestone DAG), `self-evolve` (the loop improves its *own* gate/triggers/profile and graduates
+  lessons to memory), `author-skill` (the loop **writes new skills itself** when a step recurs, and wires them
+  into the flow — no human review).
+- **From [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT)** —
+  `doubt-driven-development`, `test-driven-development`, `debugging-and-error-recovery`.
 
+The loop is **self-extending**: via `self-evolve` + `author-skill` it grows its own capabilities as it runs.
 See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for attribution.
 
 ## License
