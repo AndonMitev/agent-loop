@@ -34,6 +34,11 @@ This loop is autonomous: **you** decide and act, no human in the inner loop. Thr
    python3 .loop/loop.py check <id>
    ```
    `state.next` is your directive; `state.gate` is what "good" means; `state.triggers` route the work.
+   **`state.success` is the machine-checkable DONE predicate.** If it's empty, defining one (`act.success_add:
+   [{check,kind,desc}]`) is your FIRST job — a loop with no success predicate cannot know it's finished and runs
+   forever. If it's set and the goal may now be met, run `python3 .loop/loop.py done <id>`: loop.py RUNS the
+   checks as an external oracle (never your say-so) and, if all pass, records a verified completion and stops the
+   loop. Don't hand-assert "done" — let `done` adjudicate it.
    **Don't repeat past work — the tail is short, the ledger is your long memory.** You only see `tail 3`, so
    BEFORE starting anything check the durable, always-in-`state.json` indices: `backlog` (done?), `prereg`
    (resolved?), and **`decided`** (already explored / killed / tombstoned?). If it's in `decided`, build on the

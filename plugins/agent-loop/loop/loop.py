@@ -19,7 +19,10 @@ Commands:
   state <id>                        print state.json — the machine view a tick reads FIRST.
   status <id>                        compact one-screen human summary (goal/gate/dispatch/preregs/backlog/next).
   tail <id> [N]                     last N log records (default 5) — context for a tick.
-  check <id>                        list OPEN pre-registrations + deadlines.
+  check <id>                        list OPEN pre-registrations + deadlines + success predicates.
+  done <id>                         evaluate the loop's success predicates (loop.py RUNS them — external
+                                      oracle, not a self-claim). All pass -> mark completed, dispatch=done,
+                                      record a verified completion cycle, terminate. Else report which fail.
   append <id>                       read one JSON record from stdin, stamp cycle+ts, append, update state.
                                       stdin schema: {"observe":{...},"decide":{...},"act":{...},"next":"..."}
                                       optional top-level "dispatch": "loop"|"schedule"|"event" (per-tick override)
@@ -38,6 +41,10 @@ Commands:
                                                             (sig = the skill name it would become). Counted; once
                                                             seen >=3x and not yet a config.skill, status/check
                                                             surface it as an /author-skill trigger. Mechanical.
+                                                         "success_add":[{check,kind,desc}]  -> add a machine-
+                                                            checkable goal-completion predicate (kind: cmd =
+                                                            shell exit 0; prereg = a prereg id resolved). Linted
+                                                            at add (degenerate no-ops rejected). `done` evals it.
   rotate <id> [KEEP]                fold all but the last KEEP records to log.archive.jsonl (default 50).
   rm <id>                           delete a loop (its whole .loop/<id>/ directory). Irreversible.
   auto <id> [MAX]                   arm AI-first autonomous mode: the Stop hook self-fires /loop-tick <id>
@@ -47,7 +54,7 @@ Commands:
 
 Prerequisite: python3 on PATH. No third-party packages.
 """
-import json, os, sys, datetime, shutil
+import json, os, sys, datetime, shutil, subprocess
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 PROFILES = os.path.join(BASE, "profiles.json")
@@ -130,7 +137,7 @@ def cmd_init(argv):
         "created": ts, "updated": ts, "deadline": deadline,
         "dispatch": p.get("dispatch", "schedule"), "cadence": p["cadence"],
         "gate": p["gate"], "triggers": p["triggers"],
-        "config": {}, "prereg": [], "backlog": [],
+        "config": {}, "prereg": [], "backlog": [], "success": [],
         "last": {"cycle": 0, "ts": ts},
         "next": p["first_directive"],
     }
@@ -173,6 +180,15 @@ def cmd_status(lid):
         print(f"  done {d.get('key','?')}: {d.get('verdict','')} — {d.get('why','')}")
     for sig, n in author_candidates(st):
         print(f"  AUTHOR-SKILL: '{sig}' hand-rolled {n}x -> /author-skill it (then add to config.skills)")
+    succ = st.get("success", [])
+    if st.get("completed"):
+        print("  DONE : goal complete (all success predicates passed)")
+    elif succ:
+        print(f"  succ : {len(succ)} predicate(s) — run `done {st.get('id')}` to evaluate")
+        for it in succ:
+            print(f"    - [{it.get('kind')}] {it.get('desc') or it.get('check')}")
+    else:
+        print("  succ : NONE defined — loop cannot self-terminate (add via act.success_add)")
     print(f"  NEXT : {st.get('next','')}")
 
 
@@ -193,6 +209,12 @@ def cmd_check(lid):
         print(f"backlog {b.get('id','?')}: {b.get('want','')}  [acceptance: {b.get('acceptance','-')}]")
     for sig, n in author_candidates(st):
         print(f"AUTHOR-SKILL TRIGGER: '{sig}' hand-rolled {n}x (>= {AUTHOR_THRESHOLD}) -> /author-skill it")
+    succ = st.get("success", [])
+    if not succ:
+        print("WARN: no success predicate — loop cannot self-terminate (add via act.success_add)")
+    else:
+        for it in succ:
+            print(f"success [{it.get('kind')}]: {it.get('desc') or it.get('check')}  -> run `done {lid}` to evaluate")
 
 
 DONE_VERDICTS = {"done", "shipped", "verified", "fixed", "pass", "passed", "complete", "confirmed"}
@@ -204,6 +226,58 @@ def author_candidates(st):
     skills = set(st.get("config", {}).get("skills", []))
     return [(s, n) for s, n in st.get("manual_steps", {}).items()
             if n >= AUTHOR_THRESHOLD and s not in skills]
+
+
+SUCCESS_KINDS = {"cmd", "prereg"}
+NOOP_CMDS = {"echo", "true", ":", "printf", "false", "#"}  # degenerate "always/never passes" commands
+
+
+def lint_success_item(it):
+    """Spawn-time predicate lint (one-time, zero per-tick cost) — reject the SLOPPY 80% of degenerate
+    success predicates at the boundary, matching the reject-at-the-boundary pattern of the verify gate.
+    A cleverly-gamed predicate is irreducible here (self-evolve must periodically re-audit meaningfulness).
+    Returns an error string, or None if the item is acceptable."""
+    if not isinstance(it, dict):
+        return "must be an object {check,kind,desc}"
+    kind = it.get("kind")
+    check = str(it.get("check", "")).strip()
+    if kind not in SUCCESS_KINDS:
+        return f"kind must be one of {sorted(SUCCESS_KINDS)} (got {kind!r})"
+    if not check:
+        return "empty check"
+    if kind == "cmd":
+        first = os.path.basename(check.split()[0]) if check.split() else ""
+        if first in NOOP_CMDS:
+            return (f"degenerate no-op command ({first!r}) — a success check must verify real work output, "
+                    f"not always-pass/always-fail")
+    return None
+
+
+def evaluate_success(st):
+    """Run every success predicate and return (all_pass, results). For kind=cmd, loop.py RUNS the command
+    itself (the EXTERNAL oracle — done is adjudicated by a real check, never the agent's say-so)."""
+    items = st.get("success", [])
+    results = []
+    for it in items:
+        kind, check = it.get("kind"), it.get("check", "")
+        ok, ev = False, ""
+        if kind == "cmd":
+            try:
+                r = subprocess.run(check, shell=True, capture_output=True, text=True, timeout=120)
+                ok = r.returncode == 0
+                tail = (r.stdout or r.stderr or "").strip().splitlines()
+                ev = f"exit={r.returncode}" + (f"; {tail[-1][:160]}" if tail else "")
+            except subprocess.TimeoutExpired:
+                ev = "TIMEOUT (>120s)"
+            except Exception as e:
+                ev = f"ERROR: {e}"
+        elif kind == "prereg":
+            p = next((p for p in st.get("prereg", []) if p.get("id") == check), None)
+            ok = bool(p and p.get("status") == "resolved")
+            ev = f"prereg {check} {'resolved' if ok else 'unresolved/missing'}"
+        results.append({"desc": it.get("desc", ""), "kind": kind, "check": check, "pass": ok, "evidence": ev})
+    all_pass = bool(items) and all(r["pass"] for r in results)
+    return all_pass, results
 
 
 def cmd_append(lid):
@@ -281,8 +355,54 @@ def cmd_append(lid):
     if sig:
         ms = st.setdefault("manual_steps", {})
         ms[sig] = ms.get(sig, 0) + 1
+    # success predicates: machine-checkable goal-completion criteria, LINTED at the boundary (reject degenerate).
+    for it in act.get("success_add", []):
+        err = lint_success_item(it)
+        if err:
+            sys.exit(f"append REJECTED: success_add item invalid: {err}\n"
+                     'shape: {"check":"<cmd or prereg-id>","kind":"cmd|prereg","desc":"<what it proves>"}')
+        st.setdefault("success", []).append(
+            {"check": it["check"], "kind": it["kind"], "desc": it.get("desc", "")})
     save_state(lid, st)
     print(f"appended cycle {out['cycle']} @ {out['ts']}; {lid}/state.json updated")
+
+
+def cmd_done(lid):
+    """Evaluate the loop's success predicates. loop.py runs them (external oracle). All pass -> record a
+    VERIFIED completion cycle, set completed + dispatch=done, terminate. Else report what still fails."""
+    st = load_state(lid)
+    items = st.get("success", [])
+    if not items:
+        print(f"{lid}: NO success predicate defined — the loop cannot self-terminate. Add one via append "
+              'act.success_add:[{"check":...,"kind":"cmd|prereg","desc":...}].')
+        return
+    all_pass, results = evaluate_success(st)
+    for r in results:
+        print(f"  [{'PASS' if r['pass'] else 'FAIL'}] {r['desc'] or r['check']}  ({r['evidence']})")
+    if not all_pass:
+        print(f"{lid}: NOT done — {sum(1 for r in results if r['pass'])}/{len(results)} success checks pass.")
+        return
+    # All pass: loop.py ran the oracle, so it OWNS the proof — write a verified completion record directly.
+    ts = now_iso()
+    log = read_log(lid)
+    cyc = (log[-1]["cycle"] + 1) if log else 0
+    rec = {"cycle": cyc, "ts": ts,
+           "observe": {"success_eval": results},
+           "decide": {"verdict": "complete", "why": "all success predicates passed (externally adjudicated by loop.py done)"},
+           "act": {"change": "GOAL COMPLETE"},
+           "verify": {"check": f"loop.py done {lid}", "result": "pass",
+                      "evidence": "; ".join(f"{r['desc'] or r['check']}={r['evidence']}" for r in results)},
+           "next": "goal complete — loop terminated. Graduate the verdict to the repo journal + memory, then rm or repurpose the loop."}
+    _, _, lg, _ = paths(lid)
+    with open(lg, "a") as f:
+        f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    st["updated"] = ts
+    st["completed"] = True
+    st["dispatch"] = "done"
+    st["last"] = {"cycle": cyc, "ts": ts, "success_eval": "all pass"}
+    st["next"] = rec["next"]
+    save_state(lid, st)
+    print(f"{lid}: GOAL COMPLETE — all {len(results)} success predicates passed. dispatch=done; loop terminated.")
 
 
 def cmd_rotate(lid, keep=50):
@@ -327,6 +447,8 @@ def cmd_autotick():
     lid, it, mx = a["id"], a["iteration"], a["max"]
     st = load_state(lid)
     dispatch = st.get("dispatch", "")
+    if st.get("completed"):  # success predicates passed (via `done`) -> goal reached, stop the burst
+        os.remove(AUTOLOOP); print(f"STOP {lid} GOAL COMPLETE (success predicates passed)"); return
     if mx > 0 and it >= mx:
         # max bounds the in-session burst, NOT completion. If work remains (the tick still wanted to loop, or
         # the backlog isn't drained), say so loudly — state is fully resumable; the work is paused, not lost.
@@ -383,6 +505,8 @@ def main():
         cmd_tail(need_id(a, cmd), opt_int(a, 2, 5, cmd, "N"))
     elif cmd == "check":
         cmd_check(need_id(a, cmd))
+    elif cmd == "done":
+        cmd_done(need_id(a, cmd))
     elif cmd == "append":
         cmd_append(need_id(a, cmd))
     elif cmd == "rotate":

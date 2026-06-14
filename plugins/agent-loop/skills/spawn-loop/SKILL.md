@@ -41,6 +41,14 @@ plugin bundle, then always call `python3 .loop/loop.py`:
    (cadence / gate / triggers / first directive) and writes cycle 0 to `log.jsonl`.
 4. **Pre-register up front** (experiment loops especially): if there's a kill/keep bar, append it BEFORE any
    data via a first tick's `act.prereg_add`. For build/maintenance, seed the backlog via `act.backlog_add`.
+   **Define the success predicate** — the machine-checkable condition that means the goal is DONE — via
+   `act.success_add:[{check,kind,desc}]` (`kind:"cmd"` = a shell check that exits 0, run by `loop.py` itself as
+   an EXTERNAL oracle; `kind:"prereg"` = a named prereg resolved). A loop with no success predicate can never
+   know it's finished and runs forever. `loop.py` lints out degenerate no-ops (`echo`/`true`/`:`), but only you
+   can make it the RIGHT check — for a build it's the test/command that proves the feature; for an experiment
+   it's usually the prereg-resolved-at-deadline; for research, a form-check over the `decided` ledger. When the
+   goal may be met, a tick runs `loop.py done <id>`; all checks pass → the loop records a verified completion and
+   terminates itself.
 5. **Launch it autonomously — AI-first, no user in the inner loop.** Immediately run the first tick yourself via
    `/loop-tick <id>`; do NOT wait for the user to invoke it. From there the tick self-perpetuates (it fires its
    own next tick per its dispatch — see loop-tick step 6). One `/spawn-loop` call yields a *self-running* loop.
