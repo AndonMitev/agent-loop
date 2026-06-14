@@ -27,6 +27,11 @@ This loop is autonomous: **you** decide and act, no human in the inner loop. Thr
    decision that changes the verdict does.
 
 ## Universal procedure (every profile)
+**Show your work — never go silent.** Before each heavy step (observe / critique / build / verify / journal) emit a
+breadcrumb: `python3 .loop/loop.py phase <id> "<what you're about to do>"` — it prints `▸ <step>`, and
+`tail -f .loop/<id>/progress.log` lets anyone watch a headless/auto run step through in real time. Also narrate the
+step in your own output before a long tool call (an SSM command, a build, a subagent) so a tick never *feels* stuck.
+
 1. **Read state — this is your entire prior context.**
    ```
    python3 .loop/loop.py state <id>

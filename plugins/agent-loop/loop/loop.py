@@ -46,6 +46,8 @@ Commands:
                                                             checkable goal-completion predicate (kind: cmd =
                                                             shell exit 0; prereg = a prereg id resolved). Linted
                                                             at add (degenerate no-ops rejected). `done` evals it.
+  phase <id> "<msg>"                live progress breadcrumb mid-tick (prints `▸ msg`, sets state.phase, appends
+                                      to .loop/<id>/progress.log). `tail -f` that file to watch a run step by step.
   rotate <id> [KEEP]                fold all but the last KEEP records to log.archive.jsonl (default 50).
   rm <id>                           delete a loop (its whole .loop/<id>/ directory). Irreversible.
   auto <id> [MAX]                   arm AI-first autonomous mode: the Stop hook self-fires /loop-tick <id>
@@ -166,6 +168,8 @@ def cmd_status(lid):
           + (f"  deadline={st['deadline']}" if st.get("deadline") else ""))
     print(f"  goal : {st.get('goal','')}")
     print(f"  gate : {st.get('gate','')}")
+    if st.get("phase"):
+        print(f"  phase: {st['phase']}  (tail -f .loop/{st.get('id')}/progress.log for live steps)")
     extra = {k: v for k, v in last.items() if k not in ("cycle", "ts")}
     print(f"  last : cycle {last.get('cycle','-')} @ {last.get('ts','-')}" + (f"  {json.dumps(extra, ensure_ascii=False)}" if extra else ""))
     opens = [p for p in st.get("prereg", []) if p.get("status") == "open"]
@@ -487,6 +491,24 @@ def cmd_done(lid, dry=False):
     print(f"{lid}: GOAL COMPLETE — all {len(results)} success predicates passed. dispatch=done; loop terminated.")
 
 
+def cmd_phase(lid, msg):
+    """Live progress breadcrumb so a tick is never a black box. Prints `▸ <msg>`, sets state.phase (shown by
+    `status`), and appends a timestamped line to .loop/<id>/progress.log — `tail -f` it to watch a headless/auto
+    run step through observe -> critique -> build -> verify -> journal in real time."""
+    d, s, _, _ = paths(lid)
+    if not os.path.exists(s):
+        sys.exit(f"no loop '{lid}'")
+    ts = now_iso()
+    pf = os.path.join(d, "progress.log")
+    lines = open(pf).read().splitlines() if os.path.exists(pf) else []
+    lines.append(f"{ts}  {msg}")
+    open(pf, "w").write("\n".join(lines[-50:]) + "\n")  # keep the tail only — stays tiny
+    st = load_state(lid)
+    st["phase"] = msg
+    save_state(lid, st)
+    print(f"▸ {msg}")
+
+
 def cmd_rotate(lid, keep=50):
     _, _, lg, arch = paths(lid)
     log = read_log(lid)
@@ -589,6 +611,8 @@ def main():
         cmd_check(need_id(a, cmd))
     elif cmd == "done":
         cmd_done(need_id(a, cmd), dry="--dry-run" in a)
+    elif cmd == "phase":
+        cmd_phase(need_id(a, cmd), " ".join(a[2:]).strip() or "(no message)")
     elif cmd == "append":
         cmd_append(need_id(a, cmd))
     elif cmd == "rotate":
