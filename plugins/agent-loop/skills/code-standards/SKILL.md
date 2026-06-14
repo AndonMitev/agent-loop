@@ -30,8 +30,8 @@ Prefer LSP (go-to-definition, find-references, types) over blind grep for naviga
 **no type/build errors** (`tsc --noEmit` / `cargo check` / the project's check) before claiming done.
 
 ## 6. Commits (if the loop commits)
-No AI/assistant attribution, co-author trailers, or "generated with" footers in commits/PRs — the human is the
-sole author. Match the repo's existing commit style.
+Match the repo's existing commit style and conventions (message format, and whatever attribution/footer policy
+the repo already uses — follow the project, don't impose one).
 
 ## Compose, don't override
 If the host project has a `CLAUDE.md` / `AGENTS.md`, read and FOLLOW it — it takes precedence. This skill is the
