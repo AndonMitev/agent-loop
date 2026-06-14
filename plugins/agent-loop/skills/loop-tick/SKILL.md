@@ -39,6 +39,11 @@ This loop is autonomous: **you** decide and act, no human in the inner loop. Thr
    forever. If it's set and the goal may now be met, run `python3 .loop/loop.py done <id>`: loop.py RUNS the
    checks as an external oracle (never your say-so) and, if all pass, records a verified completion and stops the
    loop. Don't hand-assert "done" — let `done` adjudicate it.
+   **Act on mechanical advisories.** `status`/`check` surface two signals you MUST respond to this tick, not next:
+   `STALL: N working ticks no progress` → you're circling (same verdict/change/next repeating); CHANGE APPROACH —
+   zoom out, re-read `state.goal`, try a different move; do NOT repeat the last one. (soft = adjust; HARD =
+   escalate: re-decompose / different strategy / human-gate.) `REPLAN: backlog drained but goal not complete` →
+   your milestones didn't reach the goal; re-run `/plan-decompose` into NEW milestones — do NOT declare done.
    **Don't repeat past work — the tail is short, the ledger is your long memory.** You only see `tail 3`, so
    BEFORE starting anything check the durable, always-in-`state.json` indices: `backlog` (done?), `prereg`
    (resolved?), and **`decided`** (already explored / killed / tombstoned?). If it's in `decided`, build on the

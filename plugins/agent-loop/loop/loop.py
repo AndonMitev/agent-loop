@@ -54,7 +54,7 @@ Commands:
 
 Prerequisite: python3 on PATH. No third-party packages.
 """
-import json, os, sys, datetime, shutil, subprocess
+import json, os, sys, datetime, shutil, subprocess, hashlib
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 PROFILES = os.path.join(BASE, "profiles.json")
@@ -189,6 +189,13 @@ def cmd_status(lid):
             print(f"    - [{it.get('kind')}] {it.get('desc') or it.get('check')}")
     else:
         print("  succ : NONE defined — loop cannot self-terminate (add via act.success_add)")
+    level, n = stall_level(st)
+    if level == "hard":
+        print(f"  STALL: {n} working ticks, no progress (HARD) — escalate: re-decompose / change approach / human-gate")
+    elif level == "soft":
+        print(f"  STALL: {n} working ticks, no progress (soft) — zoom out / change approach before continuing")
+    if needs_replan(st):
+        print("  REPLAN: backlog drained but goal not complete — re-/plan-decompose (the plan didn't reach the goal)")
     print(f"  NEXT : {st.get('next','')}")
 
 
@@ -215,6 +222,12 @@ def cmd_check(lid):
     else:
         for it in succ:
             print(f"success [{it.get('kind')}]: {it.get('desc') or it.get('check')}  -> run `done {lid}` to evaluate")
+    level, n = stall_level(st)
+    if level:
+        print(f"STALL ({level}): {n} working ticks no progress -> "
+              + ("escalate: re-decompose / change approach / human-gate" if level == "hard" else "zoom out / change approach"))
+    if needs_replan(st):
+        print("REPLAN: backlog drained but goal not complete -> re-/plan-decompose; do NOT declare done")
 
 
 DONE_VERDICTS = {"done", "shipped", "verified", "fixed", "pass", "passed", "complete", "confirmed"}
@@ -251,6 +264,37 @@ def lint_success_item(it):
             return (f"degenerate no-op command ({first!r}) — a success check must verify real work output, "
                     f"not always-pass/always-fail")
     return None
+
+
+STALL_SOFT = 3   # consecutive WORKING ticks with no progress -> soft advisory (zoom out / change approach)
+STALL_HARD = 5   # -> hard advisory (escalate: re-decompose, change approach, or human-gate). NEVER auto-stops.
+
+
+def tick_fingerprint(rec):
+    """A semantic signature of what a tick concluded/did/queued. Identical fingerprints on consecutive
+    WORKING ticks = the loop is circling (Reflexion 'same action+result', OpenHands repeat heuristics).
+    Deliberately ignores observe-data + ts/cycle so noise doesn't mask a real stall."""
+    act = rec.get("act") if isinstance(rec.get("act"), dict) else {}
+    dec = rec.get("decide") if isinstance(rec.get("decide"), dict) else {}
+    basis = {"verdict": dec.get("verdict"), "change": act.get("change"), "next": rec.get("next")}
+    if basis["verdict"] is None and basis["change"] is None:  # fall back to full dicts if canonical fields absent
+        basis = {"decide": dec, "act": act, "next": rec.get("next")}
+    return hashlib.sha1(json.dumps(basis, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
+
+
+def stall_level(st):
+    """(level, count): 'hard' | 'soft' | None. ADVISORY only — surfaced, never acted on by the helper."""
+    n = st.get("stall_count", 0)
+    return ("hard" if n >= STALL_HARD else "soft" if n >= STALL_SOFT else None), n
+
+
+def needs_replan(st):
+    """True when the backlog is DRAINED (had items, all done) but the goal isn't complete — the plan didn't
+    reach the goal. The goal-vs-task-completion signal: re-decompose, don't declare done. Advisory."""
+    if st.get("completed") or not st.get("success"):
+        return False
+    backlog = st.get("backlog", [])
+    return bool(backlog) and all(b.get("status") == "done" for b in backlog)
 
 
 def evaluate_success(st):
@@ -363,6 +407,14 @@ def cmd_append(lid):
                      'shape: {"check":"<cmd or prereg-id>","kind":"cmd|prereg","desc":"<what it proves>"}')
         st.setdefault("success", []).append(
             {"check": it["check"], "kind": it["kind"], "desc": it.get("desc", "")})
+    # STALL DETECTION (advisory, profile-aware): count consecutive WORKING (dispatch=loop) ticks whose
+    # fingerprint doesn't change = circling. Idle ticks (schedule/event — e.g. an experiment waiting on a slow
+    # market) neither progress nor stall, so they don't count. loop.py only SURFACES the stall; it never stops.
+    fp = tick_fingerprint(out)
+    disp = rec.get("dispatch") or st.get("dispatch")
+    if disp == "loop":
+        st["stall_count"] = (st.get("stall_count", 0) + 1) if fp == st.get("last_fp") else 0
+    st["last_fp"] = fp
     save_state(lid, st)
     print(f"appended cycle {out['cycle']} @ {out['ts']}; {lid}/state.json updated")
 
@@ -381,6 +433,9 @@ def cmd_done(lid):
         print(f"  [{'PASS' if r['pass'] else 'FAIL'}] {r['desc'] or r['check']}  ({r['evidence']})")
     if not all_pass:
         print(f"{lid}: NOT done — {sum(1 for r in results if r['pass'])}/{len(results)} success checks pass.")
+        if needs_replan(st):
+            print("  REPLAN: backlog is drained but success is unmet -> your milestones didn't reach the goal. "
+                  "Re-/plan-decompose into new milestones; do NOT declare done.")
         return
     # All pass: loop.py ran the oracle, so it OWNS the proof — write a verified completion record directly.
     ts = now_iso()
