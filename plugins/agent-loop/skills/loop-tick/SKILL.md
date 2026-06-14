@@ -47,6 +47,15 @@ Run one tick of loop `<id>`. You are a **stateless** agent; the substrate is you
    optional in `act`: `config` (merge), `prereg_add` / `prereg_resolve`, `backlog_add` / `backlog_done`.
    The helper stamps cycle+ts, updates `state.last`, and sets `state.next` — the directive the NEXT tick reads.
    **That is the re-evolution.**
+   **FORCED VERIFY:** if this record marks anything DONE (`backlog_done`, or a done-ish verdict in `decided_add`),
+   you MUST run the real check first and include a top-level `"verify": {"check":"<command/test run>",
+   "result":"pass|partial|fail","evidence":"..."}` — the helper **rejects** the append otherwise, and rejects
+   `result:"fail"`. Done is a *verified fact*, never a claim. Example:
+   ```
+   python3 -c 'import json;print(json.dumps({"observe":{...},"decide":{...},
+     "act":{"backlog_done":["M1"]},"verify":{"check":"cargo test -p strategy","result":"pass",
+     "evidence":"31 passed; 0 failed"},"next":"..."}))' | python3 .loop/loop.py append <id>
+   ```
 5. **Decide DISPATCH for the next tick — schedule vs loop.** The test: *is there useful work to do right now
    whose result the next step needs?*
    - **YES → loop** — run the next tick immediately (no wait). Progress is bounded by your compute, not the world.

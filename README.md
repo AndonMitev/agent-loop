@@ -123,8 +123,10 @@ Two failure modes kill unattended loops — they're guarded explicitly:
   heavy work is delegated to throwaway subagents; `plan-decompose` cuts speculative scope; `author-skill` only
   fires on a *proven recurring* need and never duplicates. And **`self-evolve` garbage-collects every pass** —
   removes unused/duplicate skills, merges overlaps, keeps the smallest capability set. Net capability, not count.
-- **Anti-sloppy.** Nothing is marked done or journaled as a verdict until it passes the tick's **output quality
-  gate**: frozen acceptance verified by a *real* check (not vibes); every claim backed by evidence
+- **Anti-sloppy.** Verification is **mechanically forced**, not a guideline: the `append` helper **rejects** any
+  record that marks work done (`backlog_done` / a done-ish verdict) unless it carries a `verify` block with a real
+  check that passed — and rejects `result:"fail"`. Done is a verified fact, not a claim. On top of that, the
+  tick's **output quality gate**: frozen acceptance verified by a *real* check (not vibes); every claim backed by evidence
   (`file:line`/data/passing command); no overclaiming (honest `PARTIAL`/`UNKNOWN` over a confident guess);
   **confidence-filtered** (low-confidence findings are verified up or dropped, not asserted — kills false
   positives); judgment calls verified by a *separate* agent (the builder never rubber-stamps itself); terse output.

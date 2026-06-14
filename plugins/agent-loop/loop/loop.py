@@ -23,6 +23,9 @@ Commands:
   append <id>                       read one JSON record from stdin, stamp cycle+ts, append, update state.
                                       stdin schema: {"observe":{...},"decide":{...},"act":{...},"next":"..."}
                                       optional top-level "dispatch": "loop"|"schedule"|"event" (per-tick override)
+                                      optional top-level "verify": {"check","result":pass|partial|fail,"evidence"}
+                                        REQUIRED when the record marks work DONE (act.backlog_done or a done-ish
+                                        verdict) -> append is REJECTED without a passing/partial verify. Forced.
                                       optional in "act": "config":{...}        -> merge into state.config
                                                          "prereg_add":[{id,trigger,action,deadline}]
                                                          "prereg_resolve":["P1"]
@@ -181,17 +184,41 @@ def cmd_check(lid):
         print(f"backlog {b.get('id','?')}: {b.get('want','')}  [acceptance: {b.get('acceptance','-')}]")
 
 
+DONE_VERDICTS = {"done", "shipped", "verified", "fixed", "pass", "passed", "complete", "confirmed"}
+
+
 def cmd_append(lid):
     rec = json.load(sys.stdin)
     for k in ("observe", "decide", "act", "next"):
         if k not in rec:
             sys.exit(f"append: missing required field '{k}'")
+    act = rec["act"] if isinstance(rec["act"], dict) else {}
+
+    # FORCED VERIFY GATE: a record that claims work DONE must carry a verify block proving a real check passed.
+    # You cannot journal "done" on trust — the helper rejects it. (mark-done = backlog_done, or a done-ish verdict.)
+    claims_done = bool(act.get("backlog_done")) or any(
+        str(d.get("verdict", "")).strip().lower() in DONE_VERDICTS for d in act.get("decided_add", []))
+    if claims_done:
+        v = rec.get("verify") or act.get("verify")
+        if not isinstance(v, dict) or not v.get("check") or not v.get("result"):
+            sys.exit('append REJECTED: this record marks work DONE but has no proof. Add a verify block:\n'
+                     '  "verify": {"check": "<the command/test you actually ran>", '
+                     '"result": "pass|partial|fail", "evidence": "<output/file:line>"}\n'
+                     'Run the real check FIRST, then journal. Done is not a claim — it is a verified fact.')
+        if v.get("result") not in ("pass", "partial", "fail"):
+            sys.exit('append REJECTED: verify.result must be one of pass|partial|fail')
+        if v.get("result") == "fail":
+            sys.exit('append REJECTED: verify.result=fail — do not mark work done on a failing check. '
+                     'Fix it and re-verify, or record it as not-done (drop backlog_done / use an honest verdict).')
+
     log = read_log(lid)
     out = {
         "cycle": (log[-1]["cycle"] + 1) if log else 0,
         "ts": now_iso(),
         "observe": rec["observe"], "decide": rec["decide"], "act": rec["act"], "next": rec["next"],
     }
+    if rec.get("verify"):
+        out["verify"] = rec["verify"]  # keep the proof in the log trail
     _, _, lg, _ = paths(lid)
     with open(lg, "a") as f:
         f.write(json.dumps(out, ensure_ascii=False) + "\n")
