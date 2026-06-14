@@ -30,5 +30,12 @@ skills, a Stop hook); other agents (Codex) drive the same engine through this fi
 The substrate is the shared contract: state is plain JSON written only through the helper, so different agents can
 even drive the *same* loop (one spawns, another ticks) — they read/write the same `state.json` + `log.jsonl`.
 
-Scope: this targets **Claude Code and Codex** (the two we use). Other agents work too via this file, but aren't a
-focus.
+## Other agents (Windsurf, Cursor, Cline, opencode, …)
+This file IS the universal adapter. Any agent that reads `AGENTS.md` (Codex, opencode, and a growing list) drives
+the engine directly. For an agent with its own rules-file convention, the "adapter" is a one-liner pointing here:
+- Cursor → `.cursor/rules/agent-loop.mdc`: "Follow `AGENTS.md`; use `python3 .loop/loop.py` + the `SKILL.md` procedures."
+- Windsurf → `.windsurf/rules/agent-loop.md`: same one line.
+- Cline → `.clinerules/agent-loop.md`: same one line.
+
+Scope: **Claude Code and Codex are first-class** (native plugins). Everything else works through this file with
+zero or one line of glue — the engine never changes, only the entry-point filename does.
