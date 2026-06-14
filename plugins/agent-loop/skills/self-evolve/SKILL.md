@@ -17,7 +17,13 @@ The meta-loop: improve the loop's **own machinery** from its own history — aut
    - **A manual step recurred across several ticks?** Run `/author-skill` to write a new skill for it
      autonomously and wire it into the tick, so next time it's one call. *This is the self-evolution*: the loop
      grows its own capabilities instead of repeating itself. (No human review — `/author-skill` is AI-first.)
-4. **Prune.** Drop dead backlog items / resolved preregs; `loop.py rotate <id>` if the log is long (token rail).
+4. **Prune — anti-bloat (do this EVERY self-evolve, not just when adding).** Bloat is a failure mode: every
+   dead skill, duplicate capability, or stale state line makes *every future tick* heavier and dumber.
+   - Drop dead backlog items / resolved preregs; `loop.py rotate <id>` if the log is long (token rail).
+   - **Audit the capability set**: remove skills not invoked across several cycles; **merge overlapping** ones;
+     keep the *smallest* set that covers the work. Net capability, not gross count — prefer compose/merge over add.
+   - If `author-skill` ever created something that duplicates an existing skill, delete the dupe and point callers
+     at the original.
 5. **Journal the evolution** as one record (what changed in the machinery + the evidence); set `state.next`.
 
 ## Rules

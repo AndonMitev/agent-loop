@@ -102,6 +102,17 @@ The framework is built to be low-token, and autonomy doesn't change that if you 
 
 Rule of thumb: tight bursts → in-session Stop-hook (convenient); long-haul → cron (cheapest).
 
+## Staying lean & sharp (anti-bloat, anti-sloppy)
+Two failure modes kill unattended loops — they're guarded explicitly:
+- **Anti-bloat.** Ticks are stateless (read `state.json` + `tail`, never history); `rotate` bounds the log;
+  heavy work is delegated to throwaway subagents; `plan-decompose` cuts speculative scope; `author-skill` only
+  fires on a *proven recurring* need and never duplicates. And **`self-evolve` garbage-collects every pass** —
+  removes unused/duplicate skills, merges overlaps, keeps the smallest capability set. Net capability, not count.
+- **Anti-sloppy.** Nothing is marked done or journaled as a verdict until it passes the tick's **output quality
+  gate**: frozen acceptance verified by a *real* check (not vibes); every claim backed by evidence
+  (`file:line`/data/passing command); no overclaiming (honest `PARTIAL`/`UNKNOWN` over a confident guess);
+  judgment calls verified by a *separate* agent (the builder never rubber-stamps itself); terse, structured output.
+
 ## Honest limitations
 - **Self-paced loops are session-bound.** In-session self-wake (`ScheduleWakeup`) runs only while the session is
   alive. For unattended survival across closed sessions, drive `/loop-tick <id>` from a cron/CI job (or Managed
