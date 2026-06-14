@@ -44,7 +44,9 @@ Run one tick of loop `<id>`. You are a **stateless** agent; the substrate is you
      or **event** (wake on push: background-task completion, `Monitor` tailing a log, or a cron heartbeat).
    `state.dispatch` is the profile default; OVERRIDE per tick by what's actually true now (e.g. a maintenance loop
    is `event` when idle but flips to `loop` while draining fixes; an experiment loop is `schedule` but `loop`-bursts
-   when new data lands). Record the choice in `next` and actually set the wake (ScheduleWakeup / cron / immediate).
+   when new data lands). Persist the choice by adding a top-level `"dispatch": "loop"|"schedule"|"event"` to the
+   append record (so `list`/`status` show the CURRENT mode, not just the profile default), and actually set the
+   wake (ScheduleWakeup / cron / immediate).
 6. **End with a one-line delta.**
 
 ## Rules (carry across all loops)

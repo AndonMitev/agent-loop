@@ -22,6 +22,7 @@ Commands:
   check <id>                        list OPEN pre-registrations + deadlines.
   append <id>                       read one JSON record from stdin, stamp cycle+ts, append, update state.
                                       stdin schema: {"observe":{...},"decide":{...},"act":{...},"next":"..."}
+                                      optional top-level "dispatch": "loop"|"schedule"|"event" (per-tick override)
                                       optional in "act": "config":{...}        -> merge into state.config
                                                          "prereg_add":[{id,trigger,action,deadline}]
                                                          "prereg_resolve":["P1"]
@@ -188,6 +189,8 @@ def cmd_append(lid):
     if isinstance(rec["observe"], dict):
         st["last"].update(rec["observe"])
     st["next"] = rec["next"]
+    if rec.get("dispatch"):  # per-tick schedule-vs-loop override (else keep the profile default)
+        st["dispatch"] = rec["dispatch"]
     act = rec["act"] if isinstance(rec["act"], dict) else {}
     if act.get("config"):
         st.setdefault("config", {}).update(act["config"])
