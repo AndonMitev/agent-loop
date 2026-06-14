@@ -34,6 +34,10 @@ Commands:
                                                          "decided_add":[{key,verdict,why}]  -> durable ledger of
                                                             what's settled (dedup by key, survives rotate) so a
                                                             tick never re-does work that scrolled past the tail.
+                                                         "manual_step":"<kebab-sig>"  -> tag a hand-rolled step
+                                                            (sig = the skill name it would become). Counted; once
+                                                            seen >=3x and not yet a config.skill, status/check
+                                                            surface it as an /author-skill trigger. Mechanical.
   rotate <id> [KEEP]                fold all but the last KEEP records to log.archive.jsonl (default 50).
   rm <id>                           delete a loop (its whole .loop/<id>/ directory). Irreversible.
   auto <id> [MAX]                   arm AI-first autonomous mode: the Stop hook self-fires /loop-tick <id>
@@ -167,6 +171,8 @@ def cmd_status(lid):
         print(f"  done ({len(decided) - 8} older settled — see `state {st.get('id')}`)")
     for d in decided[-8:]:
         print(f"  done {d.get('key','?')}: {d.get('verdict','')} — {d.get('why','')}")
+    for sig, n in author_candidates(st):
+        print(f"  AUTHOR-SKILL: '{sig}' hand-rolled {n}x -> /author-skill it (then add to config.skills)")
     print(f"  NEXT : {st.get('next','')}")
 
 
@@ -185,9 +191,19 @@ def cmd_check(lid):
     bl = [b for b in st.get("backlog", []) if b.get("status") != "done"]
     for b in bl:
         print(f"backlog {b.get('id','?')}: {b.get('want','')}  [acceptance: {b.get('acceptance','-')}]")
+    for sig, n in author_candidates(st):
+        print(f"AUTHOR-SKILL TRIGGER: '{sig}' hand-rolled {n}x (>= {AUTHOR_THRESHOLD}) -> /author-skill it")
 
 
 DONE_VERDICTS = {"done", "shipped", "verified", "fixed", "pass", "passed", "complete", "confirmed"}
+AUTHOR_THRESHOLD = 3  # a hand-rolled step seen this many times -> surface it as an /author-skill trigger
+
+
+def author_candidates(st):
+    """Manual steps recurring enough to freeze into a skill, not yet a registered skill."""
+    skills = set(st.get("config", {}).get("skills", []))
+    return [(s, n) for s, n in st.get("manual_steps", {}).items()
+            if n >= AUTHOR_THRESHOLD and s not in skills]
 
 
 def cmd_append(lid):
@@ -258,6 +274,13 @@ def cmd_append(lid):
         ledger = st.setdefault("decided", [])
         if not any(e.get("key") == d.get("key") for e in ledger):  # dedup by key
             ledger.append(d)
+    # AUTHOR-SKILL TRIGGER (mechanical, not vibes): tag a hand-rolled step with act.manual_step (a stable
+    # kebab signature = the skill it would become). Count it; status/check surface any sig seen >=AUTHOR_THRESHOLD
+    # that isn't yet a config.skill, so a self-evolve pass cannot miss the "freeze this into a skill" signal.
+    sig = act.get("manual_step")
+    if sig:
+        ms = st.setdefault("manual_steps", {})
+        ms[sig] = ms.get(sig, 0) + 1
     save_state(lid, st)
     print(f"appended cycle {out['cycle']} @ {out['ts']}; {lid}/state.json updated")
 

@@ -65,7 +65,11 @@ This loop is autonomous: **you** decide and act, no human in the inner loop. Thr
    python3 -c 'import json;print(json.dumps({"observe":{...},"decide":{...},"act":{...},"next":"..."}))' \
      | python3 .loop/loop.py append <id>
    ```
-   optional in `act`: `config` (merge), `prereg_add` / `prereg_resolve`, `backlog_add` / `backlog_done`.
+   optional in `act`: `config` (merge), `prereg_add` / `prereg_resolve`, `backlog_add` / `backlog_done`,
+   **`manual_step`** (when you hand-roll an ad-hoc step — a multi-line command/heredoc you wrote inline rather
+   than a skill — tag it with a stable kebab signature = the skill it *would* become, e.g. `recorder-shadow-tally`.
+   The helper counts it; once seen ≥3× and not yet a `config.skill`, `status`/`check` surface it as an
+   `AUTHOR-SKILL` trigger. That's the mechanical, no-vibes signal to `/author-skill` it next self-evolve).
    The helper stamps cycle+ts, updates `state.last`, and sets `state.next` — the directive the NEXT tick reads.
    **That is the re-evolution.**
    **FORCED VERIFY:** if this record marks anything DONE (`backlog_done`, or a done-ish verdict in `decided_add`),

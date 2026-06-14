@@ -19,9 +19,11 @@ just a cron.
    - Gate / `dispatch` default / triggers mis-set? Update via `act.config` and record the evidence + why.
    - A verdict reached (bar cleared / tombstone)? **Graduate it OUT** to the repo's journal + a memory file,
      and `prereg_resolve` it. Loop-local noise stays in the log; durable truth leaves the loop.
-   - **A manual step recurred across several ticks?** Run `/author-skill` to write a new skill for it
-     autonomously and wire it into the tick, so next time it's one call. *This is the self-evolution*: the loop
-     grows its own capabilities instead of repeating itself. (No human review — `/author-skill` is AI-first.)
+   - **A manual step recurred across several ticks?** Don't rely on noticing it — the trigger is **mechanical**:
+     `loop.py status` / `check` surface any `AUTHOR-SKILL` candidate (a `manual_step` signature seen ≥3× that isn't
+     yet a `config.skill`). For each one, run `/author-skill` to write the skill autonomously, wire it in, and add
+     its name to `config.skills` (which clears the trigger). *This is the self-evolution*: the loop grows its own
+     capabilities instead of repeating itself. (No human review — `/author-skill` is AI-first.)
 4. **Prune — anti-bloat (do this EVERY self-evolve, not just when adding).** Bloat is a failure mode: every
    dead skill, duplicate capability, or stale state line makes *every future tick* heavier and dumber.
    - Drop dead backlog items / resolved preregs; `loop.py rotate <id>` if the log is long (token rail).
