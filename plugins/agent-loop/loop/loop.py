@@ -20,9 +20,10 @@ Commands:
   status <id>                        compact one-screen human summary (goal/gate/dispatch/preregs/backlog/next).
   tail <id> [N]                     last N log records (default 5) — context for a tick.
   check <id>                        list OPEN pre-registrations + deadlines + success predicates.
-  done <id>                         evaluate the loop's success predicates (loop.py RUNS them — external
-                                      oracle, not a self-claim). All pass -> mark completed, dispatch=done,
-                                      record a verified completion cycle, terminate. Else report which fail.
+  done <id> [--dry-run]             evaluate the loop's success predicates (loop.py RUNS them via shell —
+                                      external oracle, not a self-claim). All pass -> mark completed,
+                                      dispatch=done, record a verified completion cycle, terminate. Else report
+                                      which fail. --dry-run: print what WOULD run, execute nothing (blast radius).
   append <id>                       read one JSON record from stdin, stamp cycle+ts, append, update state.
                                       stdin schema: {"observe":{...},"decide":{...},"act":{...},"next":"..."}
                                       optional top-level "dispatch": "loop"|"schedule"|"event" (per-tick override)
@@ -54,7 +55,7 @@ Commands:
 
 Prerequisite: python3 on PATH. No third-party packages.
 """
-import json, os, sys, datetime, shutil, subprocess, hashlib
+import json, os, sys, datetime, shutil, subprocess, hashlib, re
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 PROFILES = os.path.join(BASE, "profiles.json")
@@ -243,6 +244,14 @@ def author_candidates(st):
 
 SUCCESS_KINDS = {"cmd", "prereg"}
 NOOP_CMDS = {"echo", "true", ":", "printf", "false", "#"}  # degenerate "always/never passes" commands
+# Foot-gun guard for cmd predicates. NOT a security boundary — `done` runs these via shell, and the REAL
+# boundary is the host agent's sandbox. This only blocks the OBVIOUS destructive shapes (accidents + lazy
+# foot-guns); a determined gamer can still bypass it. See the Security section in the README.
+DANGEROUS_CMD_PATTERNS = [
+    r"\brm\s+-[a-z]*[rf]", r":\s*\(\s*\)\s*\{", r"\bmkfs\b", r"\bdd\s+if=", r">\s*/dev/",
+    r"\b(curl|wget)\b[^|]*\|\s*(sh|bash|zsh|python)", r"\bsudo\b", r"\bchmod\s+-R\b",
+    r"\bchown\s+-R\b", r"\b(shutdown|reboot|halt|poweroff)\b", r"\bgit\b.*\bpush\b.*--force",
+]
 
 
 def lint_success_item(it):
@@ -263,6 +272,11 @@ def lint_success_item(it):
         if first in NOOP_CMDS:
             return (f"degenerate no-op command ({first!r}) — a success check must verify real work output, "
                     f"not always-pass/always-fail")
+        for pat in DANGEROUS_CMD_PATTERNS:
+            if re.search(pat, check):
+                return (f"refused: success command matches a destructive pattern (/{pat}/). `done` runs this "
+                        f"via shell — this guard blocks obvious foot-guns. (It is NOT a security boundary; the "
+                        f"host sandbox is. A success check should READ/verify state, not mutate the system.)")
     return None
 
 
@@ -297,14 +311,19 @@ def needs_replan(st):
     return bool(backlog) and all(b.get("status") == "done" for b in backlog)
 
 
-def evaluate_success(st):
+def evaluate_success(st, dry=False):
     """Run every success predicate and return (all_pass, results). For kind=cmd, loop.py RUNS the command
-    itself (the EXTERNAL oracle — done is adjudicated by a real check, never the agent's say-so)."""
+    itself (the EXTERNAL oracle — done is adjudicated by a real check, never the agent's say-so).
+    dry=True: do NOT execute cmd predicates (show what WOULD run) — inspect the blast radius first."""
     items = st.get("success", [])
     results = []
     for it in items:
         kind, check = it.get("kind"), it.get("check", "")
         ok, ev = False, ""
+        if kind == "cmd" and dry:
+            results.append({"desc": it.get("desc", ""), "kind": kind, "check": check,
+                            "pass": None, "evidence": "DRY — would run via shell (not executed)"})
+            continue
         if kind == "cmd":
             try:
                 r = subprocess.run(check, shell=True, capture_output=True, text=True, timeout=120)
@@ -419,14 +438,22 @@ def cmd_append(lid):
     print(f"appended cycle {out['cycle']} @ {out['ts']}; {lid}/state.json updated")
 
 
-def cmd_done(lid):
+def cmd_done(lid, dry=False):
     """Evaluate the loop's success predicates. loop.py runs them (external oracle). All pass -> record a
-    VERIFIED completion cycle, set completed + dispatch=done, terminate. Else report what still fails."""
+    VERIFIED completion cycle, set completed + dispatch=done, terminate. Else report what still fails.
+    dry=True: print what WOULD execute without running anything or touching state (inspect blast radius)."""
     st = load_state(lid)
     items = st.get("success", [])
     if not items:
         print(f"{lid}: NO success predicate defined — the loop cannot self-terminate. Add one via append "
               'act.success_add:[{"check":...,"kind":"cmd|prereg","desc":...}].')
+        return
+    # Visibility: these `cmd` checks are agent-authored shell commands loop.py will execute. Show them first.
+    for it in items:
+        if it.get("kind") == "cmd":
+            print(f"  cmd predicate (runs via shell): {it.get('check')}")
+    if dry:
+        print(f"{lid}: dry-run — {len(items)} predicate(s) shown above; nothing executed, state unchanged.")
         return
     all_pass, results = evaluate_success(st)
     for r in results:
@@ -561,7 +588,7 @@ def main():
     elif cmd == "check":
         cmd_check(need_id(a, cmd))
     elif cmd == "done":
-        cmd_done(need_id(a, cmd))
+        cmd_done(need_id(a, cmd), dry="--dry-run" in a)
     elif cmd == "append":
         cmd_append(need_id(a, cmd))
     elif cmd == "rotate":

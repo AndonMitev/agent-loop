@@ -16,7 +16,11 @@ just a cron.
    repeatedly worked, failed, or surprised. One-off noise is not a pattern.
 2. **Extract DURABLE lessons** — the ones true beyond this single loop.
 3. **Evolve the machinery** (only on a pattern with ≥ a few cycles of evidence):
-   - Gate / `dispatch` default / triggers mis-set? Update via `act.config` and record the evidence + why.
+   - `dispatch` default or a `config`/`skills` setting mis-tuned? Update via `act.config` (config-level only)
+     and record the evidence + why. **The loop's `gate` (its definition of "what good means") and `triggers` are
+     set at spawn and the helper does NOT mutate them via `append` — they are deliberately immutable through the
+     normal tick path.** Changing the bar is a conscious, human-reviewed edit, never a silent self-rewrite — that
+     keeps the success criteria honest (you can't quietly lower the bar to "pass").
    - A verdict reached (bar cleared / tombstone)? **Graduate it OUT** to the repo's journal + a memory file,
      and `prereg_resolve` it. Loop-local noise stays in the log; durable truth leaves the loop.
    - **A manual step recurred across several ticks?** Don't rely on noticing it — the trigger is **mechanical**:
