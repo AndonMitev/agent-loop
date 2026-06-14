@@ -49,16 +49,19 @@ plugin bundle, then always call `python3 .loop/loop.py`:
    it's usually the prereg-resolved-at-deadline; for research, a form-check over the `decided` ledger. When the
    goal may be met, a tick runs `loop.py done <id>`; all checks pass → the loop records a verified completion and
    terminates itself.
-5. **Launch it autonomously — AI-first, no user in the inner loop.** Immediately run the first tick yourself via
-   `/loop-tick <id>`; do NOT wait for the user to invoke it. From there the tick self-perpetuates (it fires its
-   own next tick per its dispatch — see loop-tick step 6). One `/spawn-loop` call yields a *self-running* loop.
-   For tight in-session bursts (e.g. a build draining a milestone), arm the Stop-hook loop so it keeps ticking
-   with zero user input: `python3 .loop/loop.py auto <id> [max]` (default max 12). It auto-stops when the tick
-   sets `dispatch` away from `loop`, when `max` is hit, or on `python3 .loop/loop.py stop`. Token rail: the cap +
-   the dispatch self-stop bound it; keep each tick cheap (delegate heavy work to a subagent, cost-gate critique).
-   `max` bounds the in-session **burst, not the work**: if it caps with work still remaining, the helper says so
-   loudly and the loop stays fully resumable from `state.next` — continue with another `loop.py auto <id>` or a
-   cron. For work that won't fit one burst, prefer cron mode (fresh `/loop-tick` per tick, no cap needed).
+5. **Launch it autonomously — this is the default, AI-first, no user in the inner loop.** Arm autonomous mode
+   and run the first tick yourself, immediately:
+   ```
+   python3 .loop/loop.py auto <id>      # on by default — the Stop hook re-fires /loop-tick with zero user input
+   /loop-tick <id>                       # kick the first tick; from here it runs itself
+   ```
+   One `/spawn-loop` yields a loop that **runs itself** — each tick fires the next per its `dispatch`, and the
+   armed Stop hook keeps it ticking hands-free. It self-stops only when the tick sets `dispatch` away from `loop`,
+   the goal completes (`done`), the burst cap is hit, or you run `python3 .loop/loop.py stop`. The cap (`auto <id>
+   [max]`, default 12) bounds one in-session **burst, not the work**: if it caps with work remaining, the loop
+   stays fully resumable from `state.next` — re-arm with another `loop.py auto <id>` or a cron. For long unattended
+   runs, point a cron at `/loop-tick <id>` (fresh process per tick). Keep each tick cheap (delegate heavy work to a
+   subagent, cost-gate critique).
 6. **Cadence / durability.** The loop self-schedules per its `dispatch`: `loop` → continue now; `schedule` →
    `ScheduleWakeup` (in-session, self-paced) or a cron; `event` → `Monitor`/cron on a signal. Self-paced loops are
    session-bound; wire a cron (`CronCreate` / system cron / CI calling `/loop-tick <id>`) for unattended survival.

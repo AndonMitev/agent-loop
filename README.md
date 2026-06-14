@@ -86,10 +86,10 @@ How it carries that out:
 - **Self-firing.** Each tick chooses its `dispatch` and fires the next tick itself — `loop` continues now,
   `schedule` self-wakes via `ScheduleWakeup`/cron, `event` waits on `Monitor`/a signal. One `/spawn-loop` →
   a self-running loop.
-- **Hands-off in-session loop (Stop hook).** Arm it with `python3 .loop/loop.py auto <id> [max]` and a `Stop`
-  hook re-fires `/loop-tick` automatically — no user clicks at all — until the tick sets `dispatch` away from
-  `loop`, `max` iterations (default 12) is hit, or `loop.py stop`. (Technique adapted from Anthropic's Ralph
-  Wiggum plugin, MIT.) Inert unless armed.
+- **Hands-off in-session loop (Stop hook) — on by default.** `/spawn-loop` arms `python3 .loop/loop.py auto <id>`,
+  so a `Stop` hook re-fires `/loop-tick` automatically — no user clicks at all — until the tick sets `dispatch`
+  away from `loop`, the goal completes, the burst cap (`max`, default 12) is hit, or you run `loop.py stop`.
+  (Technique adapted from Anthropic's Ralph Wiggum plugin, MIT.)
 - **AI second brain, not a human.** Critique is `/grill-ai` (the agent asks *and answers* from evidence) +
   `/doubt-driven-development`; errors are handled by `/debugging-and-error-recovery`. No human in the critique
   or recovery path.
@@ -164,23 +164,13 @@ nothing more. The agnostic **engine** is `loop/loop.py` + `loop/profiles.json` +
 instructions + the `.loop/` substrate (plain Python/JSON/Markdown, no Claude dependency). Codex's adapter is
 `AGENTS.md`. One engine, one small adapter per agent — the `.claude-` prefix marks the adapter, not the framework.
 
-## Security model
-The whole engine is ~600 lines of dependency-free Python (`loop/loop.py`) — readable in one sitting, nothing hidden.
-- **Completion is decided by running a real check.** `loop.py done` runs the success predicates *you* define —
-  your tests, builds, `arena calib`, whatever proves the goal — the same way a test runner, CI job, or Makefile
-  does. That's a safety feature: "done" is adjudicated by an actual check, never by the agent claiming it.
-- **Checks are transparent and inspectable.** `loop.py done <id> --dry-run` prints exactly what will run before it
-  runs. The predicate lint refuses degenerate no-ops and destructive command shapes (`rm -rf`, `curl … | sh`,
-  `sudo`, `--force` push, …) at the point you add them. A success check should *read and verify* state, not change it.
-- **The success bar can't be moved out from under you.** A loop's `gate` and `triggers` are set at spawn and are
-  immutable through the tick path — `self-evolve` tunes the directive, backlog, and config, but it cannot silently
-  lower the bar to "pass."
-- **You stay in control of autonomy.** Hands-off `auto` mode is opt-in and bounded (default 12 iterations); you set
-  the success predicates; everything the loop does is journaled to `log.jsonl` and dry-runnable. `author-skill` and
-  `self-evolve` extend the loop within your repo (like any code generator), and every change lands as a reviewable diff.
-
-It runs on top of your existing agent (Claude Code / Codex), so it inherits that agent's permissions and prompts —
-the loop adds structure and verification *on top of* tools you already trust, it doesn't grant itself new powers.
+## Controls
+Plain facts, no ceremony — the whole engine is ~600 lines of dependency-free Python you can read in one sitting:
+- It runs on top of your existing agent (Claude Code / Codex) and inherits its permissions — it adds structure and
+  verification, it doesn't grant itself new powers.
+- Completion is decided by running the checks **you** define (your tests/builds/metrics), like a test runner or CI job.
+- Everything is journaled to `log.jsonl`; `loop.py done <id> --dry-run` previews what a check will run; `loop.py
+  stop` halts a running loop anytime.
 
 ## Honest limitations
 - **Self-paced loops are session-bound.** In-session self-wake (`ScheduleWakeup`) runs only while the session is
