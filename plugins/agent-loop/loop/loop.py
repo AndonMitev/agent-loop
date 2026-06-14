@@ -162,7 +162,10 @@ def cmd_status(lid):
     todo = [b for b in st.get("backlog", []) if b.get("status") != "done"]
     for b in todo:
         print(f"  todo {b.get('id','?')}: {b.get('want','')}")
-    for d in st.get("decided", []):
+    decided = st.get("decided", [])
+    if len(decided) > 8:  # keep the glance one-screen; the full ledger lives in state.json
+        print(f"  done ({len(decided) - 8} older settled — see `state {st.get('id')}`)")
+    for d in decided[-8:]:
         print(f"  done {d.get('key','?')}: {d.get('verdict','')} — {d.get('why','')}")
     print(f"  NEXT : {st.get('next','')}")
 
