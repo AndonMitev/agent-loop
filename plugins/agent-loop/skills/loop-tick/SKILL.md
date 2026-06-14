@@ -1,6 +1,6 @@
 ---
 name: loop-tick
-description: Run ONE tick of a self-evolving agent-loop. Reads the loop's JSON state (its entire prior context), executes the profile's tick body (research / experiment / build / maintenance), and journals one record that sets the next directive. Use when a loop's scheduled wake fires, the user says "/loop-tick <id>", "tick the loop", or "run the next iteration". A tick is a pure function: (state + new data) -> (action + new state + one record).
+description: Run ONE tick of a self-evolving agent-loop. Reads the loop's JSON state (its entire prior context), executes the profile's tick body (research / experiment / build / maintenance), and journals one record that sets the next directive. Use when a loop's scheduled wake fires, the user says "/loop-tick <id>", "tick the loop", or "run the next iteration". A tick is a pure function from (state + new data) to (action + new state + one record).
 ---
 
 Run one tick of loop `<id>`. You are a **stateless** agent; the substrate is your only memory. A tick is
