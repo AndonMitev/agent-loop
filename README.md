@@ -92,6 +92,12 @@ tick overrides it by what's actually true (maintenance flips to `loop` while dra
 The framework is built to be low-token, and autonomy doesn't change that if you follow the rails:
 - **Tiny per-tick read.** A tick reads `state.json` (~1KB) + `tail 3` — never the whole history. Cost per tick
   is bounded no matter how long the log grows (`rotate` folds old records to an archive).
+- **No re-doing past work (the short tail's blind spot, solved).** Because a tick can't see history beyond the
+  tail, it could re-explore something cycle 3 already killed. The fix isn't reading more — it's a compact,
+  durable **`decided` ledger** in `state.json` (always read in full, survives `rotate`): one line per settled
+  thing (`{key, verdict, why}`, deduped by key). Every tick checks it before acting and records new verdicts
+  into it, so a tick 50 cycles later won't repeat work. The ledger *is* the optimized journal — recall without
+  re-reading logs.
 - **Cost-gated thinking.** The expensive part (critique via `/grill-ai` + a subagent) runs *only* on new data /
   anomaly, not every tick. Idle ticks are nearly free.
 - **The autonomy trap, avoided.** A naive `while true` in one session is a token bonfire — context piles up every
@@ -111,7 +117,8 @@ Two failure modes kill unattended loops — they're guarded explicitly:
 - **Anti-sloppy.** Nothing is marked done or journaled as a verdict until it passes the tick's **output quality
   gate**: frozen acceptance verified by a *real* check (not vibes); every claim backed by evidence
   (`file:line`/data/passing command); no overclaiming (honest `PARTIAL`/`UNKNOWN` over a confident guess);
-  judgment calls verified by a *separate* agent (the builder never rubber-stamps itself); terse, structured output.
+  **confidence-filtered** (low-confidence findings are verified up or dropped, not asserted — kills false
+  positives); judgment calls verified by a *separate* agent (the builder never rubber-stamps itself); terse output.
 
 ## Honest limitations
 - **Self-paced loops are session-bound.** In-session self-wake (`ScheduleWakeup`) runs only while the session is

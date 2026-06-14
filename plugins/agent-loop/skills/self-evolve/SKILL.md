@@ -24,6 +24,9 @@ The meta-loop: improve the loop's **own machinery** from its own history — aut
      keep the *smallest* set that covers the work. Net capability, not gross count — prefer compose/merge over add.
    - If `author-skill` ever created something that duplicates an existing skill, delete the dupe and point callers
      at the original.
+   - **Keep the `decided` ledger tight** — it's the loop's optimized recall (so ticks never re-read history): merge
+     near-duplicate keys, summarize a cluster of related verdicts into one line, and graduate the long story to a
+     memory file leaving a one-line pointer. The ledger should stay a scannable index, not a second log.
 5. **Journal the evolution** as one record (what changed in the machinery + the evidence); set `state.next`.
 
 ## Rules

@@ -14,6 +14,13 @@ Run one tick of loop `<id>`. You are a **stateless** agent; the substrate is you
    python3 .loop/loop.py check <id>
    ```
    `state.next` is your directive; `state.gate` is what "good" means; `state.triggers` route the work.
+   **Don't repeat past work — the tail is short, the ledger is your long memory.** You only see `tail 3`, so
+   BEFORE starting anything check the durable, always-in-`state.json` indices: `backlog` (done?), `prereg`
+   (resolved?), and **`decided`** (already explored / killed / tombstoned?). If it's in `decided`, build on the
+   verdict — do NOT redo it. Whenever you settle something (path explored, hypothesis killed, milestone shipped,
+   tombstone), record it via `act.decided_add:[{key,verdict,why}]` with a STABLE `key` — that's how a tick 50
+   cycles later, far past the tail, knows not to repeat it. If genuinely unsure, do a TARGETED grep of
+   `log.archive.jsonl` (not a full read).
 2. **Evaluate triggers** against state + observed signal — run only the matched action (keeps ticks cheap).
 3. **Run the profile's tick body** (from `state.profile`):
    - **experiment** — OBSERVE the signal → SCORE vs `state.gate`/`prereg` → CRITIQUE *(cost-gated: only on
@@ -69,7 +76,11 @@ Run one tick of loop `<id>`. You are a **stateless** agent; the substrate is you
    failures and skipped steps plainly. A confident wrong answer is the worst outcome.
 4. **Separate-verify judgment calls.** Deterministic checks you can run yourself; subjective acceptance ("is it
    correct/clean?") goes to a separate agent — the builder never rubber-stamps its own work.
-5. **Terse, structured, no padding.** The journal record and the delta are working data, not prose.
+5. **Confidence-filter (kill false positives).** Tag each finding/claim with a confidence; a low-confidence
+   finding is NOT reported as fact — either verify it up to high confidence or drop it. (Pattern borrowed from
+   the confidence-scored false-positive filtering in Anthropic's `code-review`/`pr-review-toolkit`.) Better to
+   surface 3 verified findings than 30 noisy maybes.
+6. **Terse, structured, no padding.** The journal record and the delta are working data, not prose.
 
 ## Rules (carry across all loops)
 - Context is scratch, files are truth: nothing critical lives only in your head.

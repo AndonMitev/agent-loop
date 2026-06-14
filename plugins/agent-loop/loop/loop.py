@@ -28,6 +28,9 @@ Commands:
                                                          "prereg_resolve":["P1"]
                                                          "backlog_add":[{id,want,acceptance}]
                                                          "backlog_done":["B1"]
+                                                         "decided_add":[{key,verdict,why}]  -> durable ledger of
+                                                            what's settled (dedup by key, survives rotate) so a
+                                                            tick never re-does work that scrolled past the tail.
   rotate <id> [KEEP]                fold all but the last KEEP records to log.archive.jsonl (default 50).
   rm <id>                           delete a loop (its whole .loop/<id>/ directory). Irreversible.
   auto <id> [MAX]                   arm AI-first autonomous mode: the Stop hook self-fires /loop-tick <id>
@@ -156,6 +159,8 @@ def cmd_status(lid):
     todo = [b for b in st.get("backlog", []) if b.get("status") != "done"]
     for b in todo:
         print(f"  todo {b.get('id','?')}: {b.get('want','')}")
+    for d in st.get("decided", []):
+        print(f"  done {d.get('key','?')}: {d.get('verdict','')} — {d.get('why','')}")
     print(f"  NEXT : {st.get('next','')}")
 
 
@@ -216,6 +221,13 @@ def cmd_append(lid):
         for b in st.get("backlog", []):
             if b.get("id") == bid:
                 b["status"] = "done"
+    # decided ledger: compact, durable "what's settled" index (survives rotate; always in state.json).
+    # Prevents re-doing/re-exploring work that scrolled past the tail window. One line per settled thing.
+    for d in act.get("decided_add", []):
+        d.setdefault("cycle", out["cycle"])
+        ledger = st.setdefault("decided", [])
+        if not any(e.get("key") == d.get("key") for e in ledger):  # dedup by key
+            ledger.append(d)
     save_state(lid, st)
     print(f"appended cycle {out['cycle']} @ {out['ts']}; {lid}/state.json updated")
 
