@@ -40,5 +40,19 @@
       {"when": "on-backlog-empty", "do": "sleep until next signal"}
     ],
     "first_directive": "freshness check (build/test still run?) + SCAN for the current health baseline; seed the backlog"
+  },
+  "research": {
+    "what": "Investigate an OPEN question to a well-supported, CITED answer. Orchestrator-worker: fan out parallel sub-searches across modalities, triangulate across independent sources, refute, synthesize. (Not data-hypothesis validation — that's experiment.)",
+    "dispatch": "schedule",
+    "cadence": "loop-BURST during a sweep round; schedule between rounds; stop at saturation (K rounds no new finding)",
+    "gate": "every claim triangulated across >=2 INDEPENDENT sources + survived adversarial refute + confidence-scored; completeness pass finds no unrun modality / unread key source / unresolved contradiction",
+    "tick_body": "DECOMPOSE question -> SWEEP (parallel subagent per angle) -> TRIANGULATE -> REFUTE (/grill-ai,/doubt-driven) -> SYNTHESIZE (cited, confidence) -> COMPLETENESS-CRITIC -> loop until saturation",
+    "triggers": [
+      {"when": "on-new-finding", "do": "triangulate + integrate; record in the findings/decided ledger"},
+      {"when": "on-gap", "do": "completeness critic surfaced a missing modality -> targeted new sweep"},
+      {"when": "on-contradiction", "do": "chase it across sources until resolved"},
+      {"when": "on-saturation", "do": "K rounds no new finding -> synthesize cited report + stop"}
+    ],
+    "first_directive": "DECOMPOSE the question into sub-questions + list source modalities to sweep (web/docs/code/data/primary); run the first parallel sweep via /deep-research"
   }
 }

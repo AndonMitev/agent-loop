@@ -21,6 +21,7 @@ Only one thing changes by **type of work** — a *profile*. The loop primitive a
 | **experiment** | validate an idea vs a slow/noisy signal | pre-registered bar, frozen before peeking; honest null = success |
 | **build** | construct from a milestone DAG | acceptance met **and a verifier separate from the builder** confirms |
 | **maintenance** | keep an existing app healthy | full suite green **before and after**; no regression; surgical edits |
+| **research** | investigate an open question | every claim triangulated across ≥2 independent sources, refuted, cited, confidence-scored |
 
 ## Install (Claude Code plugin)
 ```
@@ -117,6 +118,17 @@ Two failure modes kill unattended loops — they're guarded explicitly:
   **confidence-filtered** (low-confidence findings are verified up or dropped, not asserted — kills false
   positives); judgment calls verified by a *separate* agent (the builder never rubber-stamps itself); terse output.
 
+## Compatibility (Claude Code + Codex)
+The engine is tool-agnostic: a Python helper (`loop.py`) + a JSON substrate + markdown instructions, none of which
+depend on a specific agent.
+- **Claude Code** — native: install as a plugin, `/spawn-loop` & `/loop-tick` skills, a `Stop` hook for in-session
+  autonomy.
+- **Codex (and other agents)** — drive the same engine via [`AGENTS.md`](AGENTS.md): call `python3 .loop/loop.py`
+  and follow the `SKILL.md` procedures; for autonomy use headless re-invocation (`codex exec` / a cron) instead of
+  the Stop hook.
+- **Shared state** — `state.json`/`log.jsonl` are plain JSON written only through the helper, so different agents
+  can drive the *same* loop. (Targeted at Claude + Codex; others work via `AGENTS.md` but aren't a focus.)
+
 ## Honest limitations
 - **Self-paced loops are session-bound.** In-session self-wake (`ScheduleWakeup`) runs only while the session is
   alive. For unattended survival across closed sessions, drive `/loop-tick <id>` from a cron/CI job (or Managed
@@ -138,9 +150,10 @@ plugins/agent-loop/
 ## Companion skills (bundled)
 The loop tick calls these, vendored into the plugin so it works out of the box:
 - **Original, AI-first** — `grill-ai` (AI-to-AI critique second brain), `plan-decompose` (autonomous goal →
-  verifiable milestone DAG), `self-evolve` (the loop improves its *own* gate/triggers/profile and graduates
-  lessons to memory), `author-skill` (the loop **writes new skills itself** when a step recurs, and wires them
-  into the flow — no human review).
+  verifiable milestone DAG), `deep-research` (orchestrator-worker investigation: parallel sweep → triangulate →
+  refute → cited synthesis → loop-until-saturation), `self-evolve` (the loop improves its *own* gate/triggers/
+  profile and graduates lessons to memory), `author-skill` (the loop **writes new skills itself** when a step
+  recurs, and wires them into the flow — no human review).
 - **From [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT)** —
   `doubt-driven-development`, `test-driven-development`, `debugging-and-error-recovery`.
 

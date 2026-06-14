@@ -35,6 +35,9 @@ Run one tick of loop `<id>`. You are a **stateless** agent; the substrate is you
    - **maintenance** — SCAN health signals (tests / types / lint / CVEs / TODOs / metrics) → PICK a backlog item
      → IMPLEMENT **surgically** (touch only what it needs) → **FULL existing suite must be green before AND after**
      (regression gate); on regression → revert, log why, do not ship.
+   - **research** — run `/deep-research`: DECOMPOSE the question → parallel **subagent** sweep per angle →
+     TRIANGULATE (≥2 independent sources) → REFUTE (`/grill-ai` + `/doubt-driven-development`) → SYNTHESIZE
+     (cited, confidence) → COMPLETENESS-CRITIC → loop until saturation. Record findings in `decided` (no re-search).
 4. **Journal + evolve** — pipe ONE record to the helper (never hand-edit the json). Build the JSON with
    `python3 -c` so quotes/newlines/unicode can't break it (a raw `echo '{…}'` is fragile):
    ```

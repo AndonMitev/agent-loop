@@ -22,6 +22,9 @@ plugin bundle, then always call `python3 .loop/loop.py`:
      (e.g. "build feature/app/integration X").
    - **maintenance** — keep an existing app healthy; self-source work from its own signals; regression is the risk.
      (e.g. "keep repo green", "maintain/improve the dashboard").
+   - **research** — investigate an OPEN question to a cited, well-supported answer (orchestrator-worker sweep).
+     (e.g. "what's the best X for Y", "find prior art on Z"). Distinct from experiment, which validates a
+     hypothesis against data.
 2. **Pick a short kebab-case id** for the loop (e.g. `dash-health`, `idea-xyz`).
 3. **Init the substrate** — deterministic, do NOT hand-write the json:
    ```
