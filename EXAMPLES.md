@@ -36,8 +36,10 @@ python3 -c 'import json;print(json.dumps({
   "act":{"change":"shipped the fix",
          "backlog_add":[{"id":"B1","want":"list shows dispatch","acceptance":"loop.py list prints dispatch"}],
          "backlog_done":["B1"]},
+  "verify":{"check":"python3 .loop/loop.py list","result":"pass","evidence":"dispatch column now printed"},
   "dispatch":"schedule",
   "next":"work ran out -> wait"}))' | python3 .loop/loop.py append al-dev
+#   backlog_done REQUIRES a passing verify block (the helper rejects "done" without proof)
 #   when the work ran out, the tick flipped dispatch loop → schedule (it persists, shows in list)
 ```
 
