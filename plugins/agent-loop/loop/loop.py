@@ -16,7 +16,8 @@ Commands:
   list                              all loops: id, profile, cycle, open pre-regs, next (truncated).
   init <id> <profile> "<goal>" [--deadline YYYY-MM-DD]
                                     create a loop, seed state from the profile, write cycle 0.
-  state <id>                        print state.json — what a tick reads FIRST.
+  state <id>                        print state.json — the machine view a tick reads FIRST.
+  status <id>                        compact one-screen human summary (goal/gate/dispatch/preregs/backlog/next).
   tail <id> [N]                     last N log records (default 5) — context for a tick.
   check <id>                        list OPEN pre-registrations + deadlines.
   append <id>                       read one JSON record from stdin, stamp cycle+ts, append, update state.
@@ -81,8 +82,10 @@ def cmd_list():
         found = True
         st = json.load(open(s))
         opens = sum(1 for p in st.get("prereg", []) if p.get("status") == "open")
-        nx = (st.get("next") or "")[:70]
-        print(f"{lid:16} [{st.get('profile','?'):11}] cyc={st.get('last',{}).get('cycle','-'):>3}  preg={opens}  next: {nx}")
+        todo = sum(1 for b in st.get("backlog", []) if b.get("status") != "done")
+        nx = (st.get("next") or "")[:60]
+        print(f"{lid:16} [{st.get('profile','?'):11}] {st.get('dispatch','-'):8} "
+              f"cyc={st.get('last',{}).get('cycle','-'):>3}  preg={opens} todo={todo}  next: {nx}")
     if not found:
         print("no loops yet")
 
@@ -126,6 +129,25 @@ def cmd_init(argv):
 
 def cmd_state(lid):
     print(json.dumps(load_state(lid), indent=2, ensure_ascii=False))
+
+
+def cmd_status(lid):
+    """Compact one-screen human summary (state.json is the machine view; this is the glance)."""
+    st = load_state(lid)
+    last = st.get("last", {})
+    print(f"{st.get('id')}  [{st.get('profile')}]  dispatch={st.get('dispatch','-')}"
+          + (f"  deadline={st['deadline']}" if st.get("deadline") else ""))
+    print(f"  goal : {st.get('goal','')}")
+    print(f"  gate : {st.get('gate','')}")
+    extra = {k: v for k, v in last.items() if k not in ("cycle", "ts")}
+    print(f"  last : cycle {last.get('cycle','-')} @ {last.get('ts','-')}" + (f"  {json.dumps(extra, ensure_ascii=False)}" if extra else ""))
+    opens = [p for p in st.get("prereg", []) if p.get("status") == "open"]
+    for p in opens:
+        print(f"  preg {p['id']}: IF {p['trigger']} -> {p['action']}  ({p.get('deadline','-')})")
+    todo = [b for b in st.get("backlog", []) if b.get("status") != "done"]
+    for b in todo:
+        print(f"  todo {b.get('id','?')}: {b.get('want','')}")
+    print(f"  NEXT : {st.get('next','')}")
 
 
 def cmd_tail(lid, n=5):
@@ -212,6 +234,8 @@ def main():
         cmd_init(a[1:])
     elif cmd == "state":
         cmd_state(a[1])
+    elif cmd == "status":
+        cmd_status(a[1])
     elif cmd == "tail":
         cmd_tail(a[1], int(a[2]) if len(a) > 2 else 5)
     elif cmd == "check":

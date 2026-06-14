@@ -71,5 +71,13 @@ plugins/agent-loop/
   loop/profiles.json                   # the three work-type profiles
 ```
 
+## Companion skills (bundled)
+The loop tick calls a few skills, vendored into the plugin so it works out of the box:
+- `grill-ai` — original, the AI-to-AI critique second brain.
+- `doubt-driven-development`, `test-driven-development`, `debugging-and-error-recovery` — from
+  [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT).
+
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for attribution.
+
 ## License
-MIT © Andon Mitev
+MIT © Andon Mitev. Bundled third-party skills under their own MIT licenses — see THIRD_PARTY_NOTICES.md.
