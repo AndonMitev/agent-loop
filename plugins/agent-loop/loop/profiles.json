@@ -1,0 +1,41 @@
+{
+  "experiment": {
+    "what": "Validate an idea against a slow, noisy external signal. Watch-and-judge. Honest null = success.",
+    "cadence": "heartbeat ~hourly; self-pace LONG (20-30m+) when idle, tight only when fired data lands",
+    "gate": "pre-registered bar (frozen BEFORE peeking); keep/kill on the bar at the deadline; do NOT widen to chase",
+    "tick_body": "OBSERVE signal -> SCORE vs bar -> CRITIQUE (cost-gated: only on new data/anomaly) -> ACT (check preregs) -> JOURNAL",
+    "triggers": [
+      {"when": "on-new-data", "do": "score + run critique (/grill-ai + /doubt-driven)"},
+      {"when": "on-anomaly", "do": "/debugging-and-error-recovery"},
+      {"when": "on-deadline", "do": "resolve prereg -> tombstone or graduate verdict"},
+      {"when": "on-time", "do": "heartbeat: re-evaluate predicates"}
+    ],
+    "first_directive": "first real OBSERVE; confirm the signal flows; pre-register the kill/keep bar BEFORE scoring"
+  },
+  "build": {
+    "what": "Construct toward a goal from a milestone DAG. Fast local feedback. Builder never grades its own work.",
+    "cadence": "tight; wake-immediately and loop until the current milestone's acceptance is met",
+    "gate": "acceptance criteria met AND a SEPARATE verifier (not the builder) confirms via real tests/run",
+    "tick_body": "PICK milestone -> IMPLEMENT (/test-driven-development) -> VERIFY (separate agent, real checks) -> FIX -> INTEGRATE -> JOURNAL",
+    "triggers": [
+      {"when": "on-milestone-done", "do": "pop next milestone from backlog"},
+      {"when": "on-failure", "do": "/debugging-and-error-recovery"},
+      {"when": "on-verify-green", "do": "mark done, proceed"},
+      {"when": "on-backlog-empty", "do": "ship/demo, flag human gate"}
+    ],
+    "first_directive": "RESEARCH + DECOMPOSE: write milestones into backlog, each with FROZEN acceptance criteria; pick milestone 1"
+  },
+  "maintenance": {
+    "what": "Keep an existing app healthy. Self-source work from the app's own signals. Regression is the dominant risk.",
+    "cadence": "event/daily; wake when backlog non-empty or a health signal fires; sleep when green & empty",
+    "gate": "full existing suite green BEFORE and AFTER; no regression; changes SURGICAL (touch only what the item needs)",
+    "tick_body": "SCAN signals (tests/types/lint/CVEs/TODOs/metrics) -> PICK item -> IMPLEMENT surgically -> FULL-SUITE regression gate -> JOURNAL",
+    "triggers": [
+      {"when": "on-failure", "do": "enqueue fix as top backlog item"},
+      {"when": "on-threshold", "do": "enqueue work item (metric crossed bound)"},
+      {"when": "on-regression", "do": "revert, log why, do not ship"},
+      {"when": "on-backlog-empty", "do": "sleep until next signal"}
+    ],
+    "first_directive": "freshness check (build/test still run?) + SCAN for the current health baseline; seed the backlog"
+  }
+}

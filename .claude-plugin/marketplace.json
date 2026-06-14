@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "agent-loop",
+  "owner": {
+    "name": "Andon Mitev",
+    "email": "mitevandon94@gmail.com"
+  },
+  "metadata": {
+    "description": "Self-evolving autonomous loops for Claude Code — substrate + profiles + spawn/tick skills.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "agent-loop",
+      "description": "Self-evolving autonomous loops: one primitive (state + new data -> action + new state + one record), three work-type profiles (experiment / build / maintenance), pre-registration + triggers + a token-light JSON journal.",
+      "version": "0.1.0",
+      "author": { "name": "Andon Mitev" },
+      "source": "./plugins/agent-loop",
+      "category": "development",
+      "tags": ["agent", "loop", "autonomous", "self-evolving", "journal", "experiment", "build", "maintenance"],
+      "keywords": ["claude-code", "agent-loop", "autonomous", "self-evolving"]
+    }
+  ]
+}
