@@ -1,0 +1,15 @@
+{
+  "description": "agent-loop Stop hook — self-fires the next tick of an armed autonomous loop (AI-first, no user in the inner loop). Inert unless a loop is armed via `loop.py auto`.",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/stop-hook.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

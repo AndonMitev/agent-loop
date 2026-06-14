@@ -49,7 +49,9 @@ Run one tick of loop `<id>`. You are a **stateless** agent; the substrate is you
    append record (so `list`/`status` show the CURRENT mode).
 6. **Fire the next tick YOURSELF — the loop is self-perpetuating (AI-first, no user in the inner loop).** Act on
    the dispatch you just chose; do NOT wait for the user to re-invoke `/loop-tick`:
-   - `loop` → run the next tick **immediately, in this same turn** (continue working; don't stop).
+   - `loop` → run the next tick **immediately, in this same turn** (continue working; don't stop). If a Stop-hook
+     autonomous loop is armed (`loop.py auto`), do the tick's HEAVY work in a **subagent** and return only a small
+     result — the session is reused across iterations, so keeping each turn tiny is what keeps the loop token-cheap.
    - `schedule` → schedule a self-wake to run the next tick after the interval: `ScheduleWakeup` (in-session,
      self-paced) or a cron (`CronCreate` / system cron / CI calling `/loop-tick <id>`, durable across sessions).
    - `event` → arm a wake on the signal: the `Monitor` tool tailing the relevant log/output, or a cron heartbeat.
@@ -63,3 +65,6 @@ Run one tick of loop `<id>`. You are a **stateless** agent; the substrate is you
 - Guardrails are human-gated (real money, prod deploy, external publish, spending) — flag, don't fire.
 - Durable verdicts (tombstone / promotion / validated finding) graduate OUT to the repo's journal + memory.
 - Cost discipline: spend reasoning (subagents/skills) only when a trigger matches real new work.
+- Token-light: read ONLY `state.json` + `tail` (never the whole log); cost-gate the critique; in an armed
+  in-session loop, delegate heavy work to a subagent so the reused session context stays small. For long
+  unattended runs, prefer a cron firing fresh `/loop-tick` processes (zero carry-over) over a long in-session burst.

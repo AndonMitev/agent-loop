@@ -34,6 +34,10 @@ plugin bundle, then always call `python3 .loop/loop.py`:
 5. **Launch it autonomously — AI-first, no user in the inner loop.** Immediately run the first tick yourself via
    `/loop-tick <id>`; do NOT wait for the user to invoke it. From there the tick self-perpetuates (it fires its
    own next tick per its dispatch — see loop-tick step 6). One `/spawn-loop` call yields a *self-running* loop.
+   For tight in-session bursts (e.g. a build draining a milestone), arm the Stop-hook loop so it keeps ticking
+   with zero user input: `python3 .loop/loop.py auto <id> [max]` (default max 12). It auto-stops when the tick
+   sets `dispatch` away from `loop`, when `max` is hit, or on `python3 .loop/loop.py stop`. Token rail: the cap +
+   the dispatch self-stop bound it; keep each tick cheap (delegate heavy work to a subagent, cost-gate critique).
 6. **Cadence / durability.** The loop self-schedules per its `dispatch`: `loop` → continue now; `schedule` →
    `ScheduleWakeup` (in-session, self-paced) or a cron; `event` → `Monitor`/cron on a signal. Self-paced loops are
    session-bound; wire a cron (`CronCreate` / system cron / CI calling `/loop-tick <id>`) for unattended survival.

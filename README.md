@@ -58,6 +58,10 @@ The loop does not rely on you to drive each step — you give a goal and approve
 - **Self-firing.** Each tick chooses its `dispatch` and fires the next tick itself — `loop` continues now,
   `schedule` self-wakes via `ScheduleWakeup`/cron, `event` waits on `Monitor`/a signal. One `/spawn-loop` →
   a self-running loop.
+- **Hands-off in-session loop (Stop hook).** Arm it with `python3 .loop/loop.py auto <id> [max]` and a `Stop`
+  hook re-fires `/loop-tick` automatically — no user clicks at all — until the tick sets `dispatch` away from
+  `loop`, `max` iterations (default 12) is hit, or `loop.py stop`. (Technique adapted from Anthropic's Ralph
+  Wiggum plugin, MIT.) Inert unless armed.
 - **AI second brain, not a human.** Critique is `/grill-ai` (the agent asks *and answers* from evidence) +
   `/doubt-driven-development`; errors are handled by `/debugging-and-error-recovery`. No human in the critique
   or recovery path.
@@ -83,6 +87,20 @@ It's not one or the other per loop — each loop *oscillates*, decided at the en
 `state.dispatch` holds the profile default (`build → loop`, `experiment → schedule`, `maintenance → event`); each
 tick overrides it by what's actually true (maintenance flips to `loop` while draining fixes; experiment
 `loop`-bursts when new data lands).
+
+## Token cost (it's cheap by design)
+The framework is built to be low-token, and autonomy doesn't change that if you follow the rails:
+- **Tiny per-tick read.** A tick reads `state.json` (~1KB) + `tail 3` — never the whole history. Cost per tick
+  is bounded no matter how long the log grows (`rotate` folds old records to an archive).
+- **Cost-gated thinking.** The expensive part (critique via `/grill-ai` + a subagent) runs *only* on new data /
+  anomaly, not every tick. Idle ticks are nearly free.
+- **The autonomy trap, avoided.** A naive `while true` in one session is a token bonfire — context piles up every
+  iteration. We avoid it two ways: (1) the in-session Stop-hook loop is capped (`max` iterations) **and** the
+  tick delegates heavy work to a throwaway subagent, so the reused session grows only by small results; (2) for
+  long unattended runs, a **cron firing fresh `/loop-tick` processes** has *zero* carry-over — each tick starts
+  from the tiny `state.json` — which is the cheapest mode of all.
+
+Rule of thumb: tight bursts → in-session Stop-hook (convenient); long-haul → cron (cheapest).
 
 ## Honest limitations
 - **Self-paced loops are session-bound.** In-session self-wake (`ScheduleWakeup`) runs only while the session is

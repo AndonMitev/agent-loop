@@ -30,6 +30,10 @@ Commands:
                                                          "backlog_done":["B1"]
   rotate <id> [KEEP]                fold all but the last KEEP records to log.archive.jsonl (default 50).
   rm <id>                           delete a loop (its whole .loop/<id>/ directory). Irreversible.
+  auto <id> [MAX]                   arm AI-first autonomous mode: the Stop hook self-fires /loop-tick <id>
+                                      until dispatch leaves 'loop', MAX iterations (default 12), or `stop`.
+  stop                              disarm the autonomous loop (remove the pointer).
+  autotick                          (internal) the Stop hook calls this to decide CONTINUE/STOP.
 
 Prerequisite: python3 on PATH. No third-party packages.
 """
@@ -37,6 +41,7 @@ import json, os, sys, datetime, shutil
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 PROFILES = os.path.join(BASE, "profiles.json")
+AUTOLOOP = os.path.join(BASE, ".autoloop")  # armed-autonomous-loop pointer (read by the Stop hook)
 
 
 def now_iso():
@@ -231,6 +236,40 @@ def cmd_rotate(lid, keep=50):
     print(f"rotated {len(old)} -> archive; kept {len(new)}")
 
 
+def cmd_auto(lid, max_iter=12):
+    """Arm AI-first autonomous mode: the Stop hook will self-fire /loop-tick <id> until the loop's
+    dispatch leaves 'loop', max_iter is hit, or the pointer is removed (loop.py stop)."""
+    load_state(lid)  # validates the loop exists
+    json.dump({"id": lid, "iteration": 0, "max": int(max_iter)}, open(AUTOLOOP, "w"))
+    print(f"armed autonomous loop '{lid}' (max {max_iter} self-fired iterations)")
+
+
+def cmd_stop():
+    if os.path.exists(AUTOLOOP):
+        os.remove(AUTOLOOP)
+        print("disarmed autonomous loop")
+    else:
+        print("no autonomous loop armed")
+
+
+def cmd_autotick():
+    """Called by the Stop hook. Decides whether the in-session loop continues. Prints exactly one of:
+    'CONTINUE <id>'  -> hook blocks exit and re-feeds /loop-tick <id>
+    'STOP <reason>'  -> hook allows exit. Token rail: bounded by max + the tick's own dispatch decision."""
+    if not os.path.exists(AUTOLOOP):
+        return  # nothing armed -> hook allows normal exit
+    a = json.load(open(AUTOLOOP))
+    lid, it, mx = a["id"], a["iteration"], a["max"]
+    dispatch = load_state(lid).get("dispatch", "")
+    if mx > 0 and it >= mx:
+        os.remove(AUTOLOOP); print(f"STOP max-iterations ({mx})"); return
+    if dispatch != "loop":
+        os.remove(AUTOLOOP); print(f"STOP dispatch={dispatch} (loop chose to wait)"); return
+    a["iteration"] = it + 1
+    json.dump(a, open(AUTOLOOP, "w"))
+    print(f"CONTINUE {lid}")
+
+
 def cmd_rm(lid):
     d, s, _, _ = paths(lid)
     if not os.path.exists(s):
@@ -260,6 +299,12 @@ def main():
         cmd_rotate(a[1], int(a[2]) if len(a) > 2 else 50)
     elif cmd == "rm":
         cmd_rm(a[1])
+    elif cmd == "auto":
+        cmd_auto(a[1], a[2] if len(a) > 2 else 12)
+    elif cmd == "stop":
+        cmd_stop()
+    elif cmd == "autotick":
+        cmd_autotick()
     else:
         sys.exit(f"unknown command: {cmd}")
 
