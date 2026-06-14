@@ -43,6 +43,8 @@ SOFTWARE.
   substrate with iteration + dispatch-flip token rails.
 - The **zoom-out / re-orient** rule in `loop-tick` adapts the principle from `zoom-out` in
   https://github.com/mattpocock/skills (MIT).
+- The **simplicity ladder** ("stop at the first rung that holds") and the **`// shortcut: … — upgrade: …`**
+  convention in `code-standards` adapt ideas from https://github.com/DietrichGebert/ponytail (MIT).
 
 ## Optional companions (not bundled)
 - `handoff` and `observability-and-instrumentation` pair well with loops but aren't required by the tick.

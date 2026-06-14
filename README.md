@@ -136,9 +136,9 @@ The engine is tool-agnostic: a Python helper (`loop.py`) + a JSON substrate + ma
 depend on a specific agent.
 - **Claude Code** — native: install as a plugin, `/spawn-loop` & `/loop-tick` skills, a `Stop` hook for in-session
   autonomy.
-- **Codex (and other agents)** — drive the same engine via [`AGENTS.md`](AGENTS.md): call `python3 .loop/loop.py`
-  and follow the `SKILL.md` procedures; for autonomy use headless re-invocation (`codex exec` / a cron) instead of
-  the Stop hook.
+- **Codex** — native via [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) (points at the same skills),
+  plus [`AGENTS.md`](AGENTS.md) for driving the engine directly (`python3 .loop/loop.py` + the `SKILL.md`
+  procedures). For autonomy use headless re-invocation (`codex exec` / a cron) instead of the Stop hook.
 - **Shared state** — `state.json`/`log.jsonl` are plain JSON written only through the helper, so different agents
   can drive the *same* loop. (Targeted at Claude + Codex; others work via `AGENTS.md` but aren't a focus.)
 

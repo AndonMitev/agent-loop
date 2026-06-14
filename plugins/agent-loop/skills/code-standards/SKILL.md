@@ -10,10 +10,20 @@ that touches code. These are the floor; the host project's `CLAUDE.md` / `AGENTS
 State your assumptions. If the goal has multiple readings, pick the simplest that fits and say which — don't
 silently guess. If a simpler approach exists, take it. Surface real tradeoffs in the journal, up front.
 
-## 2. Simplicity first
-The minimum code that solves the *stated* goal — nothing speculative. No abstractions for single-use code, no
-"flexibility"/config nobody asked for, no error handling for impossible states. If 200 lines could be 50, write
-50. Test: *would a senior engineer call this overcomplicated?* If yes, cut it.
+## 2. Simplicity first — stop at the first rung that holds
+Before writing code, walk this ladder and stop at the first rung that solves it:
+1. **Does this need to exist?** → no: skip it (YAGNI).
+2. **Stdlib does it?** → use it.
+3. **Native platform feature?** → use it.
+4. **Already-installed dependency?** → use it (don't add a new one).
+5. **One line?** → one line.
+6. **Only then:** the minimum that works.
+
+No abstractions for single-use code, no "flexibility"/config nobody asked for, no boilerplate nobody requested.
+Deletion over addition; boring over clever. Test: *would a senior engineer call this overcomplicated?* If yes, cut it.
+**Lazy, not negligent** — simplicity NEVER cuts trust-boundary validation, data-loss handling, security, or
+accessibility. When you take a deliberate shortcut, mark it inline: `// shortcut: <why> — upgrade: <path>`, so
+the minimal choice stays visible and reversible, not hidden debt.
 
 ## 3. Surgical changes
 Touch only what the goal needs. Match the surrounding style even if you'd do it differently. Don't refactor what

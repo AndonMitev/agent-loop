@@ -1,0 +1,28 @@
+{
+  "name": "agent-loop",
+  "version": "0.1.0",
+  "description": "Self-evolving autonomous loops: AI-first, completely autonomous, token-optimized, self-evolving + journaling. One tick primitive (state + new data -> action + new state + one record); four work-type profiles (research / experiment / build / maintenance).",
+  "author": {
+    "name": "Andon Mitev",
+    "url": "https://github.com/AndonMitev"
+  },
+  "homepage": "https://github.com/AndonMitev/agent-loop",
+  "repository": "https://github.com/AndonMitev/agent-loop",
+  "license": "MIT",
+  "keywords": ["agent", "loop", "autonomous", "self-evolving", "research", "experiment", "build", "maintenance"],
+  "skills": "./plugins/agent-loop/skills/",
+  "interface": {
+    "displayName": "agent-loop",
+    "shortDescription": "Self-evolving autonomous loops",
+    "longDescription": "Give a one-line goal; it spawns a loop that observes, acts, verifies, journals, fires its own next tick, and re-evolves its directive — AI-first, token-light, self-evolving. Native on Claude Code; driveable here via the bundled skills + .loop/loop.py.",
+    "developerName": "Andon Mitev",
+    "category": "Productivity",
+    "capabilities": ["Instructions", "Lifecycle hooks"],
+    "websiteURL": "https://github.com/AndonMitev/agent-loop",
+    "defaultPrompt": [
+      "Spawn an agent-loop for this goal.",
+      "Run the next loop tick.",
+      "Show me the loop board."
+    ]
+  }
+}
