@@ -65,6 +65,10 @@ Run one tick of loop `<id>`. You are a **stateless** agent; the substrate is you
 - Guardrails are human-gated (real money, prod deploy, external publish, spending) — flag, don't fire.
 - Durable verdicts (tombstone / promotion / validated finding) graduate OUT to the repo's journal + memory.
 - Cost discipline: spend reasoning (subagents/skills) only when a trigger matches real new work.
+- Don't tunnel-vision (zoom-out): every few iterations, or whenever a loop seems stuck or drilling deep,
+  re-read `state.goal` and confirm the current work still serves it; go up a layer (map the relevant
+  modules/callers) before drilling further. Cheap insurance against a long autonomous run optimizing the
+  wrong thing. (Principle from mattpocock/skills `zoom-out`, MIT.)
 - Token-light: read ONLY `state.json` + `tail` (never the whole log); cost-gate the critique; in an armed
   in-session loop, delegate heavy work to a subagent so the reused session context stays small. For long
   unattended runs, prefer a cron firing fresh `/loop-tick` processes (zero carry-over) over a long in-session burst.

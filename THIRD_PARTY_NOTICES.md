@@ -37,6 +37,13 @@ SOFTWARE.
 - `plugins/agent-loop/skills/grill-ai` — original (MIT, © 2026 Andon Mitev), the AI-to-AI self-interrogation
   used as the loop's critique second brain.
 
+## Techniques adapted (concept, not code)
+- The in-session **Stop-hook self-firing loop** (`hooks/stop-hook.sh` + `loop.py auto`) adapts the technique from
+  Anthropic's `ralph-wiggum` plugin (https://github.com/anthropics/claude-code, MIT) — re-implemented over our
+  substrate with iteration + dispatch-flip token rails.
+- The **zoom-out / re-orient** rule in `loop-tick` adapts the principle from `zoom-out` in
+  https://github.com/mattpocock/skills (MIT).
+
 ## Optional companions (not bundled)
 - `handoff` and `observability-and-instrumentation` pair well with loops but aren't required by the tick.
   Sources: https://github.com/mattpocock/skills (MIT) and https://github.com/addyosmani/agent-skills (MIT).
