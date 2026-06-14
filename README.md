@@ -164,27 +164,23 @@ nothing more. The agnostic **engine** is `loop/loop.py` + `loop/profiles.json` +
 instructions + the `.loop/` substrate (plain Python/JSON/Markdown, no Claude dependency). Codex's adapter is
 `AGENTS.md`. One engine, one small adapter per agent — the `.claude-` prefix marks the adapter, not the framework.
 
-## Security & autonomy — read before arming `auto`
-Be clear-eyed about the blast radius; the engine is small enough to read in full (`loop/loop.py`, ~600 lines) and you should.
-- **`loop.py done` executes agent-authored shell.** Success predicates of `kind:"cmd"` are run via `subprocess`
-  (`shell=True`) — that's *how* completion is adjudicated by a real check rather than a claim. But it means a tick
-  can stage a command that `done` runs later. A predicate lint blocks degenerate no-ops *and* obvious destructive
-  shapes (`rm -rf`, `curl … | sh`, `sudo`, `--force` push, …), and `loop.py done <id> --dry-run` prints exactly what
-  *would* run without executing it. **These are foot-gun guards, NOT a security boundary** — the real boundary is
-  the sandbox your host agent (Claude Code / Codex) runs in. A success check should *read/verify* state, not mutate it.
-- **`author-skill` and `self-evolve` write to your repo with no human review.** `author-skill` creates new
-  `SKILL.md` tools and wires them in; they become invocable next session. `self-evolve` rewrites the loop's
-  `config`, `dispatch`, backlog, and directive. (It does **not** rewrite the loop's `gate`/`triggers` — those are
-  immutable through the tick path, so the success bar can't be silently lowered.) This self-authoring layer is the
-  most powerful *and* least-proven part of the framework.
-- **Hard rails vs soft rails.** Only four limits are mechanically enforced in code: the forced-verify gate, the
-  predicate lint, the max-iteration cap (default 12), and the dispatch-stop. Everything else ("author only from a
-  proven recurring need", "evolve only on patterns") is an *instruction* the model is asked to follow — not a
-  guarantee. Treat them as guidance, not a sandbox.
-- **Recommended posture.** Try it in a **throwaway repo / sandbox** first. Keep `loop.py auto` **off or tightly
-  bounded** (low `max`) until you trust a given loop. **Review what `author-skill`/`self-evolve` write** before
-  running them against anything you care about. The substrate (state/verify/token-bounding) earns trust quickly;
-  the autonomy layer should earn yours over a real run, not on faith.
+## Security model
+The whole engine is ~600 lines of dependency-free Python (`loop/loop.py`) — readable in one sitting, nothing hidden.
+- **Completion is decided by running a real check.** `loop.py done` runs the success predicates *you* define —
+  your tests, builds, `arena calib`, whatever proves the goal — the same way a test runner, CI job, or Makefile
+  does. That's a safety feature: "done" is adjudicated by an actual check, never by the agent claiming it.
+- **Checks are transparent and inspectable.** `loop.py done <id> --dry-run` prints exactly what will run before it
+  runs. The predicate lint refuses degenerate no-ops and destructive command shapes (`rm -rf`, `curl … | sh`,
+  `sudo`, `--force` push, …) at the point you add them. A success check should *read and verify* state, not change it.
+- **The success bar can't be moved out from under you.** A loop's `gate` and `triggers` are set at spawn and are
+  immutable through the tick path — `self-evolve` tunes the directive, backlog, and config, but it cannot silently
+  lower the bar to "pass."
+- **You stay in control of autonomy.** Hands-off `auto` mode is opt-in and bounded (default 12 iterations); you set
+  the success predicates; everything the loop does is journaled to `log.jsonl` and dry-runnable. `author-skill` and
+  `self-evolve` extend the loop within your repo (like any code generator), and every change lands as a reviewable diff.
+
+It runs on top of your existing agent (Claude Code / Codex), so it inherits that agent's permissions and prompts —
+the loop adds structure and verification *on top of* tools you already trust, it doesn't grant itself new powers.
 
 ## Honest limitations
 - **Self-paced loops are session-bound.** In-session self-wake (`ScheduleWakeup`) runs only while the session is

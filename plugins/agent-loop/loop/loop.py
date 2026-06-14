@@ -274,9 +274,9 @@ def lint_success_item(it):
                     f"not always-pass/always-fail")
         for pat in DANGEROUS_CMD_PATTERNS:
             if re.search(pat, check):
-                return (f"refused: success command matches a destructive pattern (/{pat}/). `done` runs this "
-                        f"via shell — this guard blocks obvious foot-guns. (It is NOT a security boundary; the "
-                        f"host sandbox is. A success check should READ/verify state, not mutate the system.)")
+                return (f"refused: success command matches a destructive pattern (/{pat}/). A success check should "
+                        f"READ/verify state (a test, a build, a metric), not mutate the system — do side-effecting "
+                        f"work in the tick, keep the completion check side-effect-free.")
     return None
 
 
