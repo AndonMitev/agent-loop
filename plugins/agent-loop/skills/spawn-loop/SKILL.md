@@ -60,11 +60,22 @@ plugin bundle, then always call `python3 .loop/loop.py`:
    the goal completes (`done`), the burst cap is hit, or you run `python3 .loop/loop.py stop`. The cap (`auto <id>
    [max]`, default 12) bounds one in-session **burst, not the work**: if it caps with work remaining, the loop
    stays fully resumable from `state.next` — re-arm with another `loop.py auto <id>` or a cron. For long unattended
-   runs, point a cron at `/loop-tick <id>` (fresh process per tick). Keep each tick cheap (delegate heavy work to a
-   subagent, cost-gate critique).
+   runs, drive a fresh tick per fire from cron. Keep each tick cheap (delegate heavy work to a subagent, cost-gate
+   critique).
 6. **Cadence / durability.** The loop self-schedules per its `dispatch`: `loop` → continue now; `schedule` →
    `ScheduleWakeup` (in-session, self-paced) or a cron; `event` → `Monitor`/cron on a signal. Self-paced loops are
-   session-bound; wire a cron (`CronCreate` / system cron / CI calling `/loop-tick <id>`) for unattended survival.
+   session-bound; wire a cron (`CronCreate` / system cron / CI) for unattended survival.
+   **CRON PROMPT RULES (do NOT get this wrong — it's the #1 loop failure):**
+   - **Never put `/loop-tick <id>` (a slash command) in a cron prompt.** Slash skills may not be registered in a
+     headless/scheduled session → it fails with "Unknown command." Use a *natural-language* prompt that points at
+     the helper + the SKILL.md file path instead.
+   - **Never dump the loop's rules into the prompt.** The gates/constraints live in `state.gate` / `state.prereg` /
+     `state.decided` — the prompt re-sending them every tick is the exact anti-pattern this framework kills.
+   - **The prompt is short + stable; the dynamism is `state.next`.** Generate the right prompt with
+     `python3 .loop/loop.py prompt <id>` (it embeds the live `state.next`, slash-free). System cron:
+     `cd <repo> && claude -p "$(python3 .loop/loop.py prompt <id>)"`. Harness cron (static prompt): copy a short
+     line like *"Run the next tick of '<id>': cd <repo>, `python3 .loop/loop.py state <id>`, follow
+     .claude/skills/loop-tick/SKILL.md; honor state.gate/prereg/decided; this tick = state.next."*
    State the cadence + durability you chose.
 
 ## Output

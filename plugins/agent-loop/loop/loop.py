@@ -48,6 +48,8 @@ Commands:
                                                             at add (degenerate no-ops rejected). `done` evals it.
   phase <id> "<msg>"                live progress breadcrumb mid-tick (prints `▸ msg`, sets state.phase, appends
                                       to .loop/<id>/progress.log). `tail -f` that file to watch a run step by step.
+  prompt <id>                       print the canonical cron/headless tick prompt (slash-free, embeds the live
+                                      state.next). Use:  claude -p "$(python3 .loop/loop.py prompt <id>)"
   rotate <id> [KEEP]                fold all but the last KEEP records to log.archive.jsonl (default 50).
   rm <id>                           delete a loop (its whole .loop/<id>/ directory). Irreversible.
   auto <id> [MAX]                   arm AI-first autonomous mode: the Stop hook self-fires /loop-tick <id>
@@ -491,6 +493,17 @@ def cmd_done(lid, dry=False):
     print(f"{lid}: GOAL COMPLETE — all {len(results)} success predicates passed. dispatch=done; loop terminated.")
 
 
+def cmd_prompt(lid):
+    """Emit the canonical tick prompt for a cron / headless invocation. DYNAMIC: embeds the live `state.next`,
+    so each fire carries the current directive — the rules live in state (gate/prereg/decided), not the prompt.
+    SLASH-FREE on purpose: points at the helper + SKILL.md instead of `/loop-tick`, which may not be registered
+    in a headless/cron session. System-cron usage:  claude -p "$(python3 .loop/loop.py prompt <id>)" """
+    st = load_state(lid)
+    print(f"Run the next tick of the '{lid}' agent-loop. cd into this repo, run `python3 .loop/loop.py state "
+          f"{lid}`, then follow .claude/skills/loop-tick/SKILL.md. Honor state.gate / prereg / decided — the "
+          f"rules live there, not in this prompt. This tick's directive (state.next): {st.get('next','')}")
+
+
 def cmd_phase(lid, msg):
     """Live progress breadcrumb so a tick is never a black box. Prints `▸ <msg>`, sets state.phase (shown by
     `status`), and appends a timestamped line to .loop/<id>/progress.log — `tail -f` it to watch a headless/auto
@@ -613,6 +626,8 @@ def main():
         cmd_done(need_id(a, cmd), dry="--dry-run" in a)
     elif cmd == "phase":
         cmd_phase(need_id(a, cmd), " ".join(a[2:]).strip() or "(no message)")
+    elif cmd == "prompt":
+        cmd_prompt(need_id(a, cmd))
     elif cmd == "append":
         cmd_append(need_id(a, cmd))
     elif cmd == "rotate":
