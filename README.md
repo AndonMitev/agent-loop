@@ -33,8 +33,9 @@ Then in any project: `/spawn-loop "<your goal>"`. On first run the helper is cop
 /spawn-loop "keep this repo green and tidy"   # → classifies → maintenance loop, seeds .loop/
 /loop-tick <id>                               # one iteration: read state → work → journal → set next
 python3 .loop/loop.py list                     # every loop at a glance
-python3 .loop/loop.py state <id>               # a loop's hot state (what a tick reads first)
+python3 .loop/loop.py status <id>              # one-screen view of a single loop
 ```
+See **[EXAMPLES.md](EXAMPLES.md)** for real runs of all three profiles (maintenance / build / experiment).
 
 ## Triggers
 Loops are condition-routed, not dumbly periodic. A trigger is a predicate over `(state, signal)` → action, at two
