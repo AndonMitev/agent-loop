@@ -14,7 +14,12 @@ This loop is autonomous: **you** decide and act, no human in the inner loop. Thr
 2. **Skills are invoked, not described.** When a step — or your own judgment — calls for a skill, CALL IT via
    the Skill tool. Never paraphrase, simulate, or inline what a skill "would" do. Invoke with judgment (when it
    earns its tokens on real work), not ceremony (don't fire skills on a trivial idle tick) — but when it fits,
-   you run it, you don't talk about running it.
+   you run it, you don't talk about running it. Your toolbox, reached for whenever it fits (not just for critique):
+   `/deep-research` to investigate an open question, `/plan-decompose` to turn a goal into milestones,
+   `/test-driven-development` + `/code-standards` to write code, `/debugging-and-error-recovery` when something
+   breaks, `/grill-ai` + `/doubt-driven-development` to critique, `/self-evolve` + `/author-skill` to improve
+   yourself — plus whatever skills the host repo provides. If you keep hand-rolling the same step, that's the
+   signal to `/author-skill` it into a reusable one (see rule below + the `self-evolve` / `author-skill` skills).
 3. **Grill yourself at every real distinction.** At any genuine fork — a kill/keep, a promote, a tombstone, an
    anomaly, a number that surprises you, a non-obvious call, anything you're tempted to simply assert — you MUST
    invoke `/grill-ai` (adversarial self-critique: ask AND answer from the evidence) *before* you commit it. The

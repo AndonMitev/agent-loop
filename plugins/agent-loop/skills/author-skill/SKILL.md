@@ -30,6 +30,18 @@ freeze. Never author for a one-off — that's premature abstraction.
    `/command` on the next session; mid-session, invoke it by reading + following the file directly.
 5. **Journal** the new capability (name + why) via the helper; `self-evolve` graduates notable ones to memory.
 
+## Worked example (what the trigger + process actually look like)
+- **Trigger.** A `/self-evolve` pass notices the loop has hand-written the *same* recorder-tally one-liner for 3
+  ticks running — SSH the box, read `trades_*_shadow.jsonl`, count variant fires by `netSh` sign. Stable, repeated,
+  not a one-off → freeze it.
+- **Author.** Name `recorder-shadow-tally`; `description: "Tally shadow-variant fires/net by netSh sign on the
+  recorder. Use when a tick needs the current standing of a shadow variant."` Body = the frozen procedure: the
+  exact box id, file path, variant filter, and python aggregation, with the output shape it returns.
+- **Validate + wire.** Frontmatter parses; steps are concrete; no existing skill already does this. Reference it
+  from the experiment profile's OBSERVE step (or `state.config.skills`).
+- **Journal + use.** Record the new capability. Next tick, the hand-rolled heredoc becomes one call:
+  `/recorder-shadow-tally contra`. A later `/self-evolve` GCs it if it stops being used.
+
 ## Rules
 - Author from a PROVEN recurring need, not speculation. Frozen, checkable, AI-first instructions matching the
   existing skills' shape. Don't duplicate — compose. No human review path.
