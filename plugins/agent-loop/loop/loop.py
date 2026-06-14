@@ -333,6 +333,15 @@ def need_id(a, cmd):
     return a[1]
 
 
+def opt_int(a, i, default, cmd, name):
+    if len(a) <= i:
+        return default
+    try:
+        return int(a[i])
+    except ValueError:
+        sys.exit(f"usage: loop.py {cmd} <id> [{name}]  ({name} must be an integer, got {a[i]!r})")
+
+
 def main():
     a = sys.argv[1:] or ["list"]
     cmd = a[0]
@@ -345,17 +354,17 @@ def main():
     elif cmd == "status":
         cmd_status(need_id(a, cmd))
     elif cmd == "tail":
-        cmd_tail(need_id(a, cmd), int(a[2]) if len(a) > 2 else 5)
+        cmd_tail(need_id(a, cmd), opt_int(a, 2, 5, cmd, "N"))
     elif cmd == "check":
         cmd_check(need_id(a, cmd))
     elif cmd == "append":
         cmd_append(need_id(a, cmd))
     elif cmd == "rotate":
-        cmd_rotate(need_id(a, cmd), int(a[2]) if len(a) > 2 else 50)
+        cmd_rotate(need_id(a, cmd), opt_int(a, 2, 50, cmd, "KEEP"))
     elif cmd == "rm":
         cmd_rm(need_id(a, cmd))
     elif cmd == "auto":
-        cmd_auto(need_id(a, cmd), a[2] if len(a) > 2 else 12)
+        cmd_auto(need_id(a, cmd), opt_int(a, 2, 12, cmd, "MAX"))
     elif cmd == "stop":
         cmd_stop()
     elif cmd == "autotick":
