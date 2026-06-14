@@ -1,6 +1,6 @@
 ---
 name: loop-tick
-description: Run ONE tick of a self-evolving agent-loop. Reads the loop's JSON state (its entire prior context), executes the profile's tick body (experiment / build / maintenance), and journals one record that sets the next directive. Use when a loop's scheduled wake fires, the user says "/loop-tick <id>", "tick the loop", or "run the next iteration". A tick is a pure function: (state + new data) -> (action + new state + one record).
+description: Run ONE tick of a self-evolving agent-loop. Reads the loop's JSON state (its entire prior context), executes the profile's tick body (research / experiment / build / maintenance), and journals one record that sets the next directive. Use when a loop's scheduled wake fires, the user says "/loop-tick <id>", "tick the loop", or "run the next iteration". A tick is a pure function: (state + new data) -> (action + new state + one record).
 ---
 
 Run one tick of loop `<id>`. You are a **stateless** agent; the substrate is your only memory. A tick is
@@ -23,6 +23,9 @@ Run one tick of loop `<id>`. You are a **stateless** agent; the substrate is you
    `log.archive.jsonl` (not a full read).
 2. **Evaluate triggers** against state + observed signal — run only the matched action (keeps ticks cheap).
 3. **Run the profile's tick body** (from `state.profile`):
+   - **research** — run `/deep-research`: DECOMPOSE the question → parallel **subagent** sweep per angle →
+     TRIANGULATE (≥2 independent sources) → REFUTE (`/grill-ai` + `/doubt-driven-development`) → SYNTHESIZE
+     (cited, confidence) → COMPLETENESS-CRITIC → loop until saturation. Record findings in `decided` (no re-search).
    - **experiment** — OBSERVE the signal → SCORE vs `state.gate`/`prereg` → CRITIQUE *(cost-gated: only on
      new data / anomaly → `/grill-ai` + a general-purpose subagent with an adversarial prompt, or your `critic`
      agent if the environment has one, + `/doubt-driven-development`)* → ACT (check preregs; bar-clear → flag
@@ -35,9 +38,6 @@ Run one tick of loop `<id>`. You are a **stateless** agent; the substrate is you
    - **maintenance** — SCAN health signals (tests / types / lint / CVEs / TODOs / metrics) → PICK a backlog item
      → IMPLEMENT **surgically** (touch only what it needs) → **FULL existing suite must be green before AND after**
      (regression gate); on regression → revert, log why, do not ship.
-   - **research** — run `/deep-research`: DECOMPOSE the question → parallel **subagent** sweep per angle →
-     TRIANGULATE (≥2 independent sources) → REFUTE (`/grill-ai` + `/doubt-driven-development`) → SYNTHESIZE
-     (cited, confidence) → COMPLETENESS-CRITIC → loop until saturation. Record findings in `decided` (no re-search).
 4. **Journal + evolve** — pipe ONE record to the helper (never hand-edit the json). Build the JSON with
    `python3 -c` so quotes/newlines/unicode can't break it (a raw `echo '{…}'` is fragile):
    ```

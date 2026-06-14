@@ -2,10 +2,10 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin.json",
   "name": "agent-loop",
   "version": "0.1.0",
-  "description": "Self-evolving autonomous loops for Claude Code. A tick is a pure function (state + new data) -> (action + new state + one record); the substrate is the loop's memory, the profile is the only thing that changes by type of work (experiment / build / maintenance).",
+  "description": "Self-evolving autonomous loops for AI coding agents (Claude Code & Codex). A tick is a pure function (state + new data) -> (action + new state + one record); the substrate is the loop's memory, the profile is the only thing that changes by type of work (research / experiment / build / maintenance).",
   "author": {
     "name": "Andon Mitev",
     "email": "mitevandon94@gmail.com"
   },
-  "keywords": ["agent", "loop", "autonomous", "self-evolving", "experiment", "build", "maintenance", "journal"]
+  "keywords": ["agent", "loop", "autonomous", "self-evolving", "research", "experiment", "build", "maintenance", "journal"]
 }

@@ -1,9 +1,9 @@
 # agent-loop
 
-**Self-evolving autonomous loops for Claude Code.** Give it a one-line goal; it stands up a loop that observes,
-acts, verifies, and journals — then **fires its own next tick** and re-evolves its directive each iteration.
-You set direction; the loop runs itself. Pure prompts + a small substrate helper: **no API key, no build step,
-no infra.** It rides your Claude Code plan.
+**Self-evolving autonomous loops for AI coding agents** (Claude Code & Codex). Give it a one-line goal; it stands
+up a loop that observes, acts, verifies, and journals — then **fires its own next tick** and re-evolves its
+directive each iteration. You set direction; the loop runs itself. The engine is plain Python + JSON + markdown
+instructions — **no API key, no build step, no infra**; it rides whichever agent you already use.
 
 ## The one idea
 A tick is a pure function:
@@ -18,10 +18,10 @@ Only one thing changes by **type of work** — a *profile*. The loop primitive a
 
 | Profile | For | Gate ("what good means") |
 |---|---|---|
+| **research** | investigate an open question | every claim triangulated across ≥2 independent sources, refuted, cited, confidence-scored |
 | **experiment** | validate an idea vs a slow/noisy signal | pre-registered bar, frozen before peeking; honest null = success |
 | **build** | construct from a milestone DAG | acceptance met **and a verifier separate from the builder** confirms |
 | **maintenance** | keep an existing app healthy | full suite green **before and after**; no regression; surgical edits |
-| **research** | investigate an open question | every claim triangulated across ≥2 independent sources, refuted, cited, confidence-scored |
 
 ## Install (Claude Code plugin)
 ```

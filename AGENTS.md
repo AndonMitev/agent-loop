@@ -8,7 +8,7 @@ skills, a Stop hook); other agents (Codex) drive the same engine through this fi
 - **Helper:** `python3 .loop/loop.py` — `list / init / state / status / tail / check / append / rotate / rm /
   auto / stop`. Pure Python, no agent dependency.
 - **State (the loop's whole memory):** `.loop/<id>/state.json` (hot) + `.loop/<id>/log.jsonl` (append-only).
-- **Profiles:** `.loop/profiles.json` (experiment / build / maintenance / research) — cadence, gate, triggers.
+- **Profiles:** `.loop/profiles.json` (research / experiment / build / maintenance) — cadence, gate, triggers.
 - **Procedures (instructions any LLM follows):** `plugins/agent-loop/skills/*/SKILL.md` — `spawn-loop`,
   `loop-tick`, `deep-research`, `plan-decompose`, `self-evolve`, `author-skill`, plus the critique/verify skills.
 

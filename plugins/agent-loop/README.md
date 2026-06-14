@@ -1,7 +1,8 @@
 # agent-loop (plugin)
 
-Self-evolving autonomous loops for Claude Code. Pure prompts + a ~180-line substrate helper — no API key, no
-build step, no infra. It rides your Claude Code plan.
+Self-evolving autonomous loops for AI coding agents (Claude Code & Codex). Plain Python + JSON + markdown
+instructions — no API key, no build step, no infra. Native as a Claude Code plugin; driveable from Codex/any
+agent via `AGENTS.md`.
 
 ## The one idea
 A tick is a pure function: **`(state.json + new data) -> (action + new state + one log record)`**. Each tick is

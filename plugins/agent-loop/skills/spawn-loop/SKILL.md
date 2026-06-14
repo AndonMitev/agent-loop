@@ -1,6 +1,6 @@
 ---
 name: spawn-loop
-description: Stand up a self-evolving autonomous loop from a one-line goal. Classifies the work-type into a profile (experiment / build / maintenance), seeds the AI-first JSON substrate via .loop/loop.py, and sets the first directive. Use when the user says "spawn a loop", "/spawn-loop", "set up an autonomous loop", or hands you a goal to pursue continuously. The entry point of the agent-loop framework.
+description: Stand up a self-evolving autonomous loop from a one-line goal. Classifies the work-type into a profile (research / experiment / build / maintenance), seeds the AI-first JSON substrate via .loop/loop.py, and sets the first directive. Use when the user says "spawn a loop", "/spawn-loop", "set up an autonomous loop", or hands you a goal to pursue continuously. The entry point of the agent-loop framework.
 ---
 
 Stand up one self-evolving loop from a single goal. You do the classification; `.loop/loop.py` does the
@@ -15,16 +15,17 @@ plugin bundle, then always call `python3 .loop/loop.py`:
 (When developing the framework in-repo, `.loop/loop.py` already exists and this is a no-op.)
 
 ## Procedure
-1. **Classify the work-type** from the goal into exactly one profile (read `.loop/profiles.json` if unsure):
+1. **Classify the work-type** from the goal into exactly one profile (read `.loop/profiles.json` if unsure).
+   Natural lifecycle order — research → experiment → build → maintenance:
+   - **research** — investigate an OPEN question to a cited, well-supported answer (orchestrator-worker sweep).
+     (e.g. "what's the best X for Y", "find prior art on Z"). Distinct from experiment, which validates a
+     hypothesis against data.
    - **experiment** — validate an idea against a slow/noisy external signal; watch-and-judge; honest null = success.
      (e.g. "test whether signal X predicts Y", "does strategy Z have edge").
    - **build** — construct something toward a goal from a milestone DAG; fast local feedback; ship it.
      (e.g. "build feature/app/integration X").
    - **maintenance** — keep an existing app healthy; self-source work from its own signals; regression is the risk.
      (e.g. "keep repo green", "maintain/improve the dashboard").
-   - **research** — investigate an OPEN question to a cited, well-supported answer (orchestrator-worker sweep).
-     (e.g. "what's the best X for Y", "find prior art on Z"). Distinct from experiment, which validates a
-     hypothesis against data.
 2. **Pick a short kebab-case id** for the loop (e.g. `dash-health`, `idea-xyz`).
 3. **Init the substrate** — deterministic, do NOT hand-write the json:
    ```
