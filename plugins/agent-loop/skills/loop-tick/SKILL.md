@@ -31,13 +31,14 @@ Run one tick of loop `<id>`. You are a **stateless** agent; the substrate is you
      agent if the environment has one, + `/doubt-driven-development`)* → ACT (check preregs; bar-clear → flag
      human; deadline no-clear → tombstone). Pre-register any NEW threshold BEFORE peeking.
    - **build** — if the backlog is empty, `/plan-decompose` the goal into milestones first. Then: PICK the current
-     milestone → IMPLEMENT via `/test-driven-development` → **VERIFY** with REAL
+     milestone → IMPLEMENT via `/test-driven-development`, following **`/code-standards`** (simplicity-first,
+     surgical, senior-engineer bar) → **VERIFY** with REAL
      checks the builder didn't write: a *deterministic mechanical* check (compile / test / run the command) is
      enough on its own; for *judgment-heavy* acceptance (does it read well? is it correct in spirit?) use a
      SEPARATE agent so the builder never grades its own work → FIX → INTEGRATE → mark milestone done.
    - **maintenance** — SCAN health signals (tests / types / lint / CVEs / TODOs / metrics) → PICK a backlog item
-     → IMPLEMENT **surgically** (touch only what it needs) → **FULL existing suite must be green before AND after**
-     (regression gate); on regression → revert, log why, do not ship.
+     → IMPLEMENT **surgically** per **`/code-standards`** (touch only what it needs, match style) → **FULL
+     existing suite green before AND after** (regression gate); on regression → revert, log why, do not ship.
 4. **Journal + evolve** — pipe ONE record to the helper (never hand-edit the json). Build the JSON with
    `python3 -c` so quotes/newlines/unicode can't break it (a raw `echo '{…}'` is fragile):
    ```

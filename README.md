@@ -176,6 +176,12 @@ The loop tick calls these, vendored into the plugin so it works out of the box:
 - **From [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT)** —
   `doubt-driven-development`, `test-driven-development`, `debugging-and-error-recovery`.
 
+**Good code, not just working code.** Build/maintenance ticks follow `code-standards` (think-before-coding,
+simplicity-first, surgical changes, goal-driven+verified, LSP/types, no AI commit attribution). It **composes**
+with the host project's own `CLAUDE.md` / `AGENTS.md` — on Claude Code your existing CLAUDE.md is already loaded
+and takes precedence; `code-standards` is the baseline that travels with the framework (and covers Codex, which
+doesn't read CLAUDE.md).
+
 The loop is **self-extending**: via `self-evolve` + `author-skill` it grows its own capabilities as it runs.
 See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for attribution.
 
