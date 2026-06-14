@@ -129,6 +129,12 @@ depend on a specific agent.
 - **Shared state** — `state.json`/`log.jsonl` are plain JSON written only through the helper, so different agents
   can drive the *same* loop. (Targeted at Claude + Codex; others work via `AGENTS.md` but aren't a focus.)
 
+**Why the `.claude-plugin/` directory, if it's agnostic?** That name is *required* by Claude Code to discover and
+install a plugin (`marketplace.json` + `plugin.json` live there) — it's the **Claude adapter**, two manifest files,
+nothing more. The agnostic **engine** is `loop/loop.py` + `loop/profiles.json` + the `skills/*/SKILL.md`
+instructions + the `.loop/` substrate (plain Python/JSON/Markdown, no Claude dependency). Codex's adapter is
+`AGENTS.md`. One engine, one small adapter per agent — the `.claude-` prefix marks the adapter, not the framework.
+
 ## Honest limitations
 - **Self-paced loops are session-bound.** In-session self-wake (`ScheduleWakeup`) runs only while the session is
   alive. For unattended survival across closed sessions, drive `/loop-tick <id>` from a cron/CI job (or Managed
